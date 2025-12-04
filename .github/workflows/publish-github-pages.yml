@@ -1,0 +1,49 @@
+name: Publish Documentation to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+      repository-projects: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode.app
+      
+      - name: Show Swift version
+        run: swift --version
+      
+      - name: Resolve dependencies
+        run: swift package resolve
+      
+      - name: Build package
+        run: swift build
+      
+      - name: Generate and Publish DocC Documentation
+        run: |
+          chmod +x scripts/publish-docc-to-github-pages.sh
+          ./scripts/publish-docc-to-github-pages.sh
+        env:
+          # Use PAT if available, otherwise fall back to GITHUB_TOKEN (may have limited access)
+          # GitHub Actions expressions: use ternary operator with fromJSON for boolean check
+          GITHUB_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+        continue-on-error: true
