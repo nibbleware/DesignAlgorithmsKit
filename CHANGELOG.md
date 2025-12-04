@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- N/A
+
+### Changed
+- N/A
+
+### Deprecated
+- N/A
+
+### Removed
+- N/A
+
+### Fixed
+- N/A
+
+### Security
+- N/A
+
+## [1.0.3] - 2025-12-04
+
+### Added
 - Added comprehensive unit tests for Builder pattern (12 tests total)
   - Test for BaseBuilder default implementation (notImplemented error)
   - Tests for BuilderError localizedDescription for all error cases
