@@ -304,6 +304,8 @@ final class BuilderTests: XCTestCase {
             }
             
             override func build() throws -> TestObject {
+                // Explicitly call validate() to ensure default implementation is covered
+                try validate()
                 guard let value = value else {
                     throw BuilderError.missingRequiredProperty("value")
                 }
@@ -316,6 +318,37 @@ final class BuilderTests: XCTestCase {
             .setValue(42)
             .build()
         XCTAssertEqual(object.value, 42)
+    }
+    
+    func testValidatingBuilderProtocolDefaultImplementation() throws {
+        // Given - Test the default validate() implementation directly
+        struct TestObject {
+            let value: String
+        }
+        
+        class DirectValidateBuilder: BaseBuilder<TestObject>, ValidatingBuilderProtocol {
+            private var value: String?
+            
+            func setValue(_ value: String) -> Self {
+                self.value = value
+                return self
+            }
+            
+            override func build() throws -> TestObject {
+                // Call validate() explicitly to test default implementation
+                try validate() // Default implementation does nothing
+                guard let value = value else {
+                    throw BuilderError.missingRequiredProperty("value")
+                }
+                return TestObject(value: value)
+            }
+        }
+        
+        // When/Then - Default validate() should not throw
+        let object = try DirectValidateBuilder()
+            .setValue("test")
+            .build()
+        XCTAssertEqual(object.value, "test")
     }
     
     func testValidatingBuilderWithCustomValidation() throws {

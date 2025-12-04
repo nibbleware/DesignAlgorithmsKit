@@ -13,6 +13,18 @@ public protocol Singleton {
     static var shared: Self { get }
 }
 
+/// Singleton errors
+public enum SingletonError: Error {
+    case createSharedNotImplemented(String)
+    
+    public var localizedDescription: String {
+        switch self {
+        case .createSharedNotImplemented(let typeName):
+            return "Subclass '\(typeName)' must implement createShared()"
+        }
+    }
+}
+
 /// Thread-safe singleton base class
 ///
 /// Provides a base implementation for singleton pattern with thread-safe
@@ -49,11 +61,15 @@ open class ThreadSafeSingleton {
     
     /// Create shared instance (must be implemented by subclass)
     /// - Returns: Shared singleton instance
-    open class func createShared() -> Self {
-        fatalError("Subclass must implement createShared()")
+    /// - Throws: SingletonError if not implemented by subclass
+    open class func createShared() throws -> Self {
+        let typeName = String(describing: Self.self)
+        throw SingletonError.createSharedNotImplemented(typeName)
     }
     
     /// Shared singleton instance (lazy, thread-safe)
+    /// - Note: This will call `fatalError()` if `createShared()` is not implemented,
+    ///   as this indicates a programming error that should fail fast.
     public static var shared: Self {
         lock.lock()
         defer { lock.unlock() }
@@ -64,9 +80,14 @@ open class ThreadSafeSingleton {
             return existing
         }
         
-        let newInstance = createShared()
-        instances[typeID] = newInstance
-        return newInstance
+        do {
+            let newInstance = try createShared()
+            instances[typeID] = newInstance
+            return newInstance
+        } catch {
+            // This is a programming error - fail fast
+            fatalError(error.localizedDescription)
+        }
     }
 }
 

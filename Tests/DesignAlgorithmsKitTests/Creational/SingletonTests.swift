@@ -243,20 +243,32 @@ final class SingletonTests: XCTestCase {
     
     func testThreadSafeSingletonCreateSharedNotImplemented() {
         // Given - A singleton that doesn't override createShared()
-        // Note: We can't test fatalError directly in unit tests, but we can verify
-        // the class structure is correct. In a real scenario, accessing .shared would crash
-        // with fatalError because createShared() is not implemented.
         class NoCreateSharedSingleton: ThreadSafeSingleton {
             private override init() {
                 super.init()
             }
-            // Doesn't override createShared() - would cause fatalError if .shared is accessed
+            // Doesn't override createShared() - will throw SingletonError
         }
         
-        // When/Then - Verify the class can be defined and is a ThreadSafeSingleton
-        // The fatalError in createShared() would occur at runtime when accessing .shared
+        // When/Then - Test that createShared() throws SingletonError
+        XCTAssertThrowsError(try NoCreateSharedSingleton.createShared()) { error in
+            if case SingletonError.createSharedNotImplemented(let typeName) = error {
+                XCTAssertTrue(typeName.contains("NoCreateSharedSingleton"))
+            } else {
+                XCTFail("Expected SingletonError.createSharedNotImplemented, got \(error)")
+            }
+        }
+        
+        // Verify accessing .shared still causes fatalError (programming error)
+        // Note: We can't test fatalError directly, but we verify the error path exists
         let type: ThreadSafeSingleton.Type = NoCreateSharedSingleton.self
         XCTAssertNotNil(type)
+    }
+    
+    func testSingletonErrorLocalizedDescription() {
+        // Test SingletonError localizedDescription
+        let error = SingletonError.createSharedNotImplemented("TestSingleton")
+        XCTAssertEqual(error.localizedDescription, "Subclass 'TestSingleton' must implement createShared()")
     }
     
     func testThreadSafeSingletonInit() {
