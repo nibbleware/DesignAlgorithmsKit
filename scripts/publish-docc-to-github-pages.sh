@@ -73,8 +73,21 @@ mkdir -p "$DOCBUILD_DIR"
 
 # Build documentation using xcodebuild docbuild
 echo "Building documentation with xcodebuild..."
-# For Swift packages, we need to use -packagePath instead of -scheme
+# First, generate an Xcode project if it doesn't exist
+if [ ! -f "$REPO_ROOT/${PACKAGE_NAME}.xcodeproj/project.pbxproj" ]; then
+    echo "Generating Xcode project..."
+    cd "$REPO_ROOT"
+    swift package generate-xcodeproj 2>/dev/null || {
+        echo "Note: generate-xcodeproj may not be available, trying direct build..."
+    }
+fi
+
+# Build documentation - try with scheme first, then with package
 if xcodebuild docbuild \
+    -scheme "$PACKAGE_NAME" \
+    -derivedDataPath "$DOCBUILD_DIR" \
+    -destination 'generic/platform=macOS' 2>&1 || \
+   xcodebuild docbuild \
     -packagePath "$REPO_ROOT" \
     -derivedDataPath "$DOCBUILD_DIR" \
     -destination 'generic/platform=macOS' 2>&1; then
