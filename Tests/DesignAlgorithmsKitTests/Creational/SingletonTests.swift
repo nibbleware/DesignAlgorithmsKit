@@ -253,9 +253,10 @@ final class SingletonTests: XCTestCase {
             // Doesn't override createShared() - would cause fatalError if .shared is accessed
         }
         
-        // When/Then - Verify the class can be defined
+        // When/Then - Verify the class can be defined and is a ThreadSafeSingleton
         // The fatalError in createShared() would occur at runtime when accessing .shared
-        XCTAssertTrue(NoCreateSharedSingleton.self is ThreadSafeSingleton.Type)
+        let type: ThreadSafeSingleton.Type = NoCreateSharedSingleton.self
+        XCTAssertNotNil(type)
     }
     
     func testThreadSafeSingletonInit() {
