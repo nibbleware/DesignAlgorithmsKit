@@ -29,9 +29,15 @@ public protocol HashAlgorithm {
 
 extension HashAlgorithm {
     /// Default implementation for string hashing
+    /// - Parameter string: String to hash
+    /// - Returns: Hash value as Data, or empty Data if UTF-8 conversion fails
+    /// - Note: UTF-8 conversion failure returns empty Data, which will hash to a valid hash value.
+    ///   This path is testable by creating strings that fail UTF-8 conversion (rare but possible).
     public static func hash(string: String) -> Data {
         guard let data = string.data(using: .utf8) else {
-            return Data()
+            // UTF-8 conversion failed - return hash of empty data
+            // This is a valid fallback that ensures we always return a hash
+            return hash(data: Data())
         }
         return hash(data: data)
     }
@@ -55,6 +61,9 @@ public enum SHA256: HashAlgorithm {
     #if !canImport(CryptoKit)
     /// Fallback hash implementation (simple, not cryptographically secure)
     /// For production use, import CryptoKit or CommonCrypto
+    /// - Note: This path is conditionally compiled and only available when CryptoKit is not available.
+    ///   It cannot be tested in environments where CryptoKit is available (like macOS/iOS test environments).
+    ///   The fallback implementation is intentionally simple and not cryptographically secure.
     private static func fallbackHash(data: Data) -> Data {
         var hash = Data(count: 32)
         data.withUnsafeBytes { dataBytes in

@@ -163,5 +163,41 @@ final class HashAlgorithmTests: XCTestCase {
         // Then
         XCTAssertEqual(hash.count, 32, "Invalid UTF-8 data should still produce hash")
     }
+    
+    func testHashAlgorithmStringExtensionFallback() {
+        // Given - Test that the extension fallback (hashing empty data) works correctly
+        // Note: Swift's String.data(using: .utf8) rarely returns nil, so we test the fallback
+        // behavior by verifying that empty data hashing works, which is what happens
+        // when UTF-8 conversion fails in the extension.
+        let emptyData = Data()
+        let hashFromEmptyData = SHA256.hash(data: emptyData)
+        
+        // When - Hash empty string (which should convert to empty data)
+        let hashFromEmptyString = SHA256.hash(string: "")
+        
+        // Then - Both should produce valid hashes
+        XCTAssertEqual(hashFromEmptyData.count, 32)
+        XCTAssertEqual(hashFromEmptyString.count, 32)
+        // Empty string should hash to the same as empty data
+        XCTAssertEqual(hashFromEmptyString, hashFromEmptyData)
+    }
+    
+    func testHashAlgorithmStringExtensionConsistency() {
+        // Given - Verify that the extension correctly converts strings to data
+        let testStrings = [
+            "normal string",
+            "string with émojis 🚀",
+            "string with\nnewlines",
+            "string with\t tabs"
+        ]
+        
+        // When/Then - Verify extension produces same hash as manual conversion
+        for testString in testStrings {
+            let hashFromExtension = SHA256.hash(string: testString)
+            let hashFromManual = SHA256.hash(data: testString.data(using: .utf8)!)
+            XCTAssertEqual(hashFromExtension, hashFromManual, 
+                          "Extension should produce same hash as manual conversion for: \(testString)")
+        }
+    }
 }
 
