@@ -109,6 +109,10 @@ fi
 if [ -d "$CLONE_DIR" ] && [ -d "$CLONE_DIR/.git" ]; then
     echo "Updating existing clone..."
     cd "$CLONE_DIR"
+    # Configure remote URL with token for pushing (if in GitHub Actions)
+    if [ -n "$GITHUB_ACTIONS" ] && [ -n "$GITHUB_TOKEN" ]; then
+        git remote set-url origin "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/${GITHUB_PAGES_REPO}.git"
+    fi
     # Try master first (common for older repos), then main
     git pull origin master 2>/dev/null || git pull origin main 2>/dev/null || true
 else
