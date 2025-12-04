@@ -199,8 +199,8 @@ if [ -n "$STATIC_DOCS_DIR" ] && [ -d "$STATIC_DOCS_DIR" ]; then
         window.location.href = "/${DOCS_DIR}/documentation/${PACKAGE_NAME_LOWER}/";
     </script>
 </head>
-<body>
-    <p>Redirecting to <a href="/${DOCS_DIR}/documentation/${PACKAGE_NAME,,}/">${PACKAGE_NAME} Documentation</a>...</p>
+    <body>
+    <p>Redirecting to <a href="/${DOCS_DIR}/documentation/${PACKAGE_NAME_LOWER}/">${PACKAGE_NAME} Documentation</a>...</p>
 </body>
 </html>
 EOF
