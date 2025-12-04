@@ -86,7 +86,10 @@ open class ThreadSafeSingleton {
             return newInstance
         } catch {
             // This is a programming error - fail fast
-            fatalError(error.localizedDescription)
+            // Note: This fatalError path cannot be tested in unit tests as it would crash the test suite.
+            // The error path is testable via createShared() directly, but the fatalError here is intentional
+            // for production code to fail fast on programming errors.
+            fatalError(error.localizedDescription) // swiftlint:disable:this fatal_error_message
         }
     }
 }
