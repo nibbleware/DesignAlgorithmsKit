@@ -171,15 +171,19 @@ final class FactoryTests: XCTestCase {
         XCTAssertFalse(factory.isRegistered(type: "test2"))
     }
     
+    @MainActor
     func testFactoryThreadSafety() {
         // Given
         let expectation = expectation(description: "Thread safety test")
         expectation.expectedFulfillmentCount = 10
         
+        // Capture factory strongly to avoid capturing self in the closure
+        let testFactory = self.factory!
+        
         // When - Register from multiple threads
         for i in 0..<10 {
             DispatchQueue.global().async {
-                self.factory.register(type: "type\(i)") { _ in "value\(i)" }
+                testFactory.register(type: "type\(i)") { _ in "value\(i)" }
                 expectation.fulfill()
             }
         }

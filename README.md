@@ -54,7 +54,7 @@ All patterns and algorithms follow consistent implementation guidelines for main
 
 ## Requirements
 
-- Swift 5.9+
+- Swift 6.2+
 - macOS 10.15+ / iOS 13.0+ / tvOS 13.0+ / watchOS 6.0+
 
 ## Installation

@@ -168,15 +168,19 @@ final class RegistryTests: XCTestCase {
         XCTAssertFalse(registry.isRegistered(key: "nonexistent"))
     }
     
+    @MainActor
     func testRegistryThreadSafety() {
         // Given
         let expectation = expectation(description: "Thread safety test")
         expectation.expectedFulfillmentCount = 10
         
+        // Capture registry strongly to avoid capturing self
+        let testRegistry = self.registry!
+        
         // When - Register from multiple threads
         for i in 0..<10 {
             DispatchQueue.global().async {
-                self.registry.register(String.self, key: "key\(i)")
+                testRegistry.register(String.self, key: "key\(i)")
                 expectation.fulfill()
             }
         }

@@ -28,7 +28,7 @@ final class SingletonTests: XCTestCase {
                 // Use class-specific static storage that's truly isolated
                 // This struct is unique to this specific class type
                 struct IsolatedStorage {
-                    static var instance: IsolatedSingletonTest1?
+                    nonisolated(unsafe) static var instance: IsolatedSingletonTest1?
                 }
                 if IsolatedStorage.instance == nil {
                     IsolatedStorage.instance = IsolatedSingletonTest1()
@@ -50,6 +50,7 @@ final class SingletonTests: XCTestCase {
         XCTAssertEqual(instance2.value, "modified", "Both references should point to same instance")
     }
     
+    @MainActor
     func testThreadSafeSingletonThreadSafety() {
         // Given - Use unique class name to avoid conflicts
         class ThreadSafetyTestSingleton: ThreadSafeSingleton {
@@ -61,7 +62,7 @@ final class SingletonTests: XCTestCase {
             
             override class func createShared() -> Self {
                 struct StaticStorage {
-                    static var instance: ThreadSafetyTestSingleton?
+                    nonisolated(unsafe) static var instance: ThreadSafetyTestSingleton?
                 }
                 if StaticStorage.instance == nil {
                     StaticStorage.instance = ThreadSafetyTestSingleton()
@@ -105,7 +106,7 @@ final class SingletonTests: XCTestCase {
             
             override class func createShared() -> Self {
                 struct StaticStorage {
-                    static var instance: StateTestSingleton?
+                    nonisolated(unsafe) static var instance: StateTestSingleton?
                 }
                 if StaticStorage.instance == nil {
                     StaticStorage.instance = StateTestSingleton()
@@ -134,7 +135,7 @@ final class SingletonTests: XCTestCase {
             
             override class func createShared() -> Self {
                 struct StaticStorage {
-                    static var instance: SubclassTestBaseSingleton?
+                    nonisolated(unsafe) static var instance: SubclassTestBaseSingleton?
                 }
                 if StaticStorage.instance == nil {
                     StaticStorage.instance = SubclassTestBaseSingleton()
@@ -152,7 +153,7 @@ final class SingletonTests: XCTestCase {
             
             override class func createShared() -> Self {
                 struct StaticStorage {
-                    static var instance: SubclassTestDerivedSingleton?
+                    nonisolated(unsafe) static var instance: SubclassTestDerivedSingleton?
                 }
                 if StaticStorage.instance == nil {
                     StaticStorage.instance = SubclassTestDerivedSingleton()
@@ -183,7 +184,7 @@ final class SingletonTests: XCTestCase {
             
             override class func createShared() -> Self {
                 struct StaticStorage {
-                    static var instance: ProtocolTestSingleton?
+                    nonisolated(unsafe) static var instance: ProtocolTestSingleton?
                 }
                 if StaticStorage.instance == nil {
                     StaticStorage.instance = ProtocolTestSingleton()
@@ -203,6 +204,7 @@ final class SingletonTests: XCTestCase {
     // MARK: - ActorSingleton Protocol Tests
     
     @available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
+    @MainActor
     func testActorSingletonProtocol() {
         // Given
         actor TestActorSingleton: ActorSingleton {
@@ -283,7 +285,7 @@ final class SingletonTests: XCTestCase {
             
             override class func createShared() -> Self {
                 struct StaticStorage {
-                    static var instance: InitTestSingleton?
+                    nonisolated(unsafe) static var instance: InitTestSingleton?
                 }
                 if StaticStorage.instance == nil {
                     StaticStorage.instance = InitTestSingleton()
