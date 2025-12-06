@@ -5,6 +5,7 @@
 //  Merkle Tree - A hash tree data structure used for efficient verification of large data structures
 //
 
+#if !os(WASI)
 import Foundation
 
 /// Protocol for types that can be hashed for Merkle tree construction
@@ -283,3 +284,4 @@ public struct MerkleProofNode {
         self.isLeft = isLeft
     }
 }
+#endif

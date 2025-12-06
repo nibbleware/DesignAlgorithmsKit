@@ -5,6 +5,7 @@
 //  Bloom Filter - A probabilistic data structure for membership testing
 //
 
+#if !os(WASI)
 import Foundation
 
 /// Protocol for types that can be hashed for Bloom Filter
@@ -448,4 +449,5 @@ public final class CountingBloomFilter {
         elementCount = 0
     }
 }
+#endif
 

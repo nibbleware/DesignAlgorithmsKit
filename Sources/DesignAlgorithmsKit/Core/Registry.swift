@@ -41,7 +41,7 @@ public final class TypeRegistry: @unchecked Sendable {
     nonisolated private static let lock = NSLock()
     #else
     // WASM: Single-threaded, no locking needed
-    private static var _shared: TypeRegistry?
+    nonisolated(unsafe) private static var _shared: TypeRegistry?
     #endif
     
     /// Shared singleton instance (lazy)

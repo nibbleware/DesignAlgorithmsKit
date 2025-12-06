@@ -54,7 +54,7 @@ open class ThreadSafeSingleton {
     #endif
     
     /// Type-specific instance storage keyed by type identifier
-    private static var instances: [ObjectIdentifier: Any] = [:]
+    nonisolated(unsafe) private static var instances: [ObjectIdentifier: Any] = [:]
     
     /// Initialize singleton (must be called from subclass)
     public init() {

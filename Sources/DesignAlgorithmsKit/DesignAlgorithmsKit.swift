@@ -68,11 +68,4 @@ public struct DesignAlgorithmsKit {
 ///     .setProperty("value")
 ///     .build()
 ///
-/// // Use Merkle Tree
-/// let tree = MerkleTree.build(from: dataBlocks)
-/// let rootHash = tree.rootHash
-/// ```
-public enum DesignAlgorithmsKit {
-    /// DesignAlgorithmsKit version
-    public static let version = "1.1.0"
-}
+

@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "DesignAlgorithmsKit",
     platforms: [
-        .macOS(.v14),
-        .iOS(.v17)
+        .macOS(.v12),
+        .iOS(.v15)
     ],
     products: [
         .library(
@@ -26,7 +26,8 @@ let package = Package(
                 // Exclude hash/crypto types for WASM builds (they use NSLock)
                 "Algorithms/DataStructures/BloomFilter.swift",
                 "Algorithms/DataStructures/MerkleTree.swift",
-                "Algorithms/Hashing/HashAlgorithm.swift"
+                "Algorithms/Hashing/HashAlgorithm.swift",
+                "Algorithms/WASMGuard.swift"
             ]
         ),
         .testTarget(

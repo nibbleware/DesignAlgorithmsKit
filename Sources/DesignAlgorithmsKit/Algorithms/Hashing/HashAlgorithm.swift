@@ -5,6 +5,7 @@
 //  Hash Algorithm Protocol - Base protocol for hash algorithms
 //
 
+#if !os(WASI)
 import Foundation
 
 #if canImport(CryptoKit)
@@ -83,4 +84,5 @@ public enum SHA256: HashAlgorithm {
     }
     #endif
 }
+#endif
 

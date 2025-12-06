@@ -36,7 +36,7 @@ public final class ObjectFactory: @unchecked Sendable {
     nonisolated(unsafe) private static var _shared: ObjectFactory?
     nonisolated private static let lock = NSLock()
     #else
-    private static var _shared: ObjectFactory?
+    nonisolated(unsafe) private static var _shared: ObjectFactory?
     #endif
     
     /// Shared singleton instance
