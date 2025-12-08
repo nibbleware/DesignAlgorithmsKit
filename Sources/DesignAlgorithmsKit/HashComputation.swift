@@ -15,7 +15,7 @@ import CommonCrypto
 #endif
 
 /// Supported hash algorithms
-public enum HashAlgorithm: String, Sendable, CaseIterable {
+public enum HashAlgorithm: String, Codable, Sendable, CaseIterable {
     case sha256 = "sha256"
     case sha1 = "sha1"
     case md5 = "md5"
