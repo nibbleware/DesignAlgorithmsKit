@@ -197,6 +197,56 @@ final class HashComputationTests: XCTestCase {
         XCTAssertEqual(HashAlgorithm.crc32.rawValue, "crc32")
     }
     
+    // MARK: - Error Tests
+    
+    func testHashComputationError_AlgorithmNotSupported() {
+        let error = HashComputationError.algorithmNotSupported("test-algorithm")
+        
+        XCTAssertEqual(error.errorDescription, "Hash algorithm 'test-algorithm' is not supported on this platform")
+    }
+    
+    func testHashComputationError_ComputationFailed() {
+        let error = HashComputationError.computationFailed("test error message")
+        
+        XCTAssertEqual(error.errorDescription, "Hash computation failed: test error message")
+    }
+    
+    // MARK: - Data Extension Tests
+    
+    func testDataExtension_SHA256() {
+        let data = "Test Data".data(using: .utf8)!
+        let hash = data.sha256
+        
+        // SHA256 produces 32 bytes
+        XCTAssertEqual(hash.count, 32)
+        XCTAssertFalse(hash.isEmpty)
+    }
+    
+    func testDataExtension_SHA256Hex() {
+        let data = "Test Data".data(using: .utf8)!
+        let hex = data.sha256Hex
+        
+        // SHA256 hex should be 64 characters (32 bytes * 2)
+        XCTAssertEqual(hex.count, 64)
+        XCTAssertFalse(hex.isEmpty)
+        
+        // Should match manual computation
+        let manualHex = try! HashComputation.computeHashHex(data: data, algorithm: .sha256)
+        XCTAssertEqual(hex, manualHex)
+    }
+    
+    func testDataExtension_EmptyDataFallback() {
+        // Test that extensions handle errors gracefully
+        let data = Data()
+        
+        let hash = data.sha256
+        let hex = data.sha256Hex
+        
+        // Should not crash, should return empty/default values
+        XCTAssertEqual(hash.count, 32) // SHA256 of empty data
+        XCTAssertEqual(hex.count, 64)
+    }
+    
     // MARK: - Performance Tests
     
     func testPerformance_SHA256() {
