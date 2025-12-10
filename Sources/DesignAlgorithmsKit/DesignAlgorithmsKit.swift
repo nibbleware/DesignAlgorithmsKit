@@ -51,7 +51,7 @@ import Foundation
 /// - WASM (limited - excludes hash/crypto types that require NSLock)
 public struct DesignAlgorithmsKit {
     /// Library version
-    public static let version = "1.2.2"
+    public static let version = "1.3.0"
 }
 
 // Re-export all modules
