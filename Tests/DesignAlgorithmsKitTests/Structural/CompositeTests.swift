@@ -49,10 +49,12 @@ final class CompositeTests: XCTestCase {
     
     func testOperationPropagation() {
         let root = TestComposite(name: "root")
+        let branch = TestComposite(name: "branch")
         let leaf1 = TestLeaf(name: "leaf1")
         let leaf2 = TestLeaf(name: "leaf2")
         
-        root.add(leaf1)
+        root.add(branch)
+        branch.add(leaf1)
         root.add(leaf2)
         
         root.operation()
@@ -72,5 +74,57 @@ final class CompositeTests: XCTestCase {
         root.remove(leaf)
         XCTAssertEqual(root.getChildren().count, 0)
         XCTAssertNil(leaf.parent)
+    }
+    
+    func testRemoveNonChild() {
+        let root = TestComposite(name: "root")
+        let leaf1 = TestLeaf(name: "leaf1")
+        let leaf2 = TestLeaf(name: "leaf2") // Not added
+        
+        root.add(leaf1)
+        
+        // Verify removing non-child does nothing bad
+        root.remove(leaf2)
+        XCTAssertEqual(root.getChildren().count, 1)
+        
+        // Leaf2 still has no parent
+        XCTAssertNil(leaf2.parent)
+    }
+    
+    func testMovingChild() {
+        let root1 = TestComposite(name: "root1")
+        let root2 = TestComposite(name: "root2")
+        let leaf = TestLeaf(name: "leaf")
+        
+        root1.add(leaf)
+        XCTAssertTrue(leaf.parent === root1)
+        
+        // Remove from 1, add to 2
+        root1.remove(leaf)
+        XCTAssertNil(leaf.parent)
+        
+        root2.add(leaf)
+        XCTAssertTrue(leaf.parent === root2)
+    }
+    
+    func testDeepRecursion() {
+        // Create a deep structure
+        let root = TestComposite(name: "root")
+        var current = root
+        
+        // 50 levels deep
+        for i in 0..<50 {
+            let next = TestComposite(name: "level\(i)")
+            current.add(next)
+            current = next
+        }
+        
+        let leaf = TestLeaf(name: "bottom")
+        current.add(leaf)
+        
+        // Execute operation from top
+        root.operation()
+        
+        XCTAssertTrue(leaf.operationCalled)
     }
 }

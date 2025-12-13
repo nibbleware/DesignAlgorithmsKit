@@ -40,6 +40,9 @@ final class ThreadSafeDictionaryTests: XCTestCase {
         // Write with default (modify)
         dict["a", default: 0] += 1
         XCTAssertEqual(dict["a"], 1)
+        
+        // Verify it persists
+        XCTAssertEqual(dict["a"], 1)
     }
     
     func testUpdateValue() {
@@ -71,8 +74,11 @@ final class ThreadSafeDictionaryTests: XCTestCase {
         let dict = ThreadSafeDictionary(["a": 1, "b": 2])
         
         XCTAssertEqual(dict.all.count, 2)
-        XCTAssertEqual(dict.keys.sorted(), ["a", "b"])
-        XCTAssertEqual(dict.values.sorted(), [1, 2])
+        let keys = dict.keys.sorted()
+        let values = dict.values.sorted()
+        
+        XCTAssertEqual(keys, ["a", "b"])
+        XCTAssertEqual(values, [1, 2])
         
         dict.removeAll()
         XCTAssertTrue(dict.isEmpty)
@@ -80,18 +86,45 @@ final class ThreadSafeDictionaryTests: XCTestCase {
     
     func testConcurrency() {
         let dict = ThreadSafeDictionary<Int, Int>()
-        let iterations = 1000
+        let iterations = 2000
         let expectation = self.expectation(description: "Concurrent dictionary access")
         expectation.expectedFulfillmentCount = iterations
         
         DispatchQueue.concurrentPerform(iterations: iterations) { i in
+            // Concurrent writes
             dict[i] = i
+            
+            // Occasional read
+            if i % 100 == 0 {
+                _ = dict[i]
+            }
+            
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 10.0)
+        
+        XCTAssertEqual(dict.count, iterations)
+    }
+    
+    func testConcurrentUpdatesSameKey() {
+        let dict = ThreadSafeDictionary<String, Int>(["counter": 0])
+        let iterations = 1000
+        let expectation = self.expectation(description: "Concurrent increment")
+        expectation.expectedFulfillmentCount = iterations
+        
+        // Attempt to race on same key
+        // NOTE: This test doesn't guarantee atomic increment because read & write are separate operations in `dict["counter"] += 1`
+        // We must use `write` block for atomic updates.
+        
+        DispatchQueue.concurrentPerform(iterations: iterations) { _ in
+            dict.write { $0["counter", default: 0] += 1 }
             expectation.fulfill()
         }
         
         waitForExpectations(timeout: 5.0)
         
-        XCTAssertEqual(dict.count, iterations)
+        XCTAssertEqual(dict["counter"], iterations)
     }
     
     func testReadWriteBlock() {
