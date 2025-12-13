@@ -24,7 +24,7 @@ final class MergerTests: XCTestCase {
         }
     }
     
-    class TestMerger: DefaultMerger<TestItem> {
+    class TestMerger: DefaultMerger<TestItem>, @unchecked Sendable {
         var storage: [UUID: TestItem] = [:]
         
         override func findExisting(by id: UUID) async -> TestItem? {
@@ -253,7 +253,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertDirectly() async throws {
         // Given - Create a merger that uses DefaultMerger's upsert implementation
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -279,7 +279,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertWithExisting() async throws {
         // Given
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -302,7 +302,7 @@ final class MergerTests: XCTestCase {
         let existing = TestItem(id: UUID(), name: "Existing", value: 10)
         let new = TestItem(id: existing.id, name: "Updated", value: 20)
         
-        await merger.storage[existing.id] = existing
+        merger.storage[existing.id] = existing
         
         // When - upsert with existing item
         let upserted = try await merger.upsert(new, strategy: .preferNew)
@@ -331,7 +331,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertWithCombineStrategy() async throws {
         // Given
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -347,7 +347,7 @@ final class MergerTests: XCTestCase {
         let existing = TestItem(id: UUID(), name: "Existing", value: 10)
         let new = TestItem(id: existing.id, name: "New", value: 20)
         
-        await merger.storage[existing.id] = existing
+        merger.storage[existing.id] = existing
         
         // When - upsert with combine strategy
         let upserted = try await merger.upsert(new, strategy: .combine)
@@ -360,7 +360,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertNewItemWithCombineStrategy() async throws {
         // Given
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -385,7 +385,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertNewItemWithPreferExistingStrategy() async throws {
         // Given
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -410,7 +410,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertNewItemWithCustomStrategy() async throws {
         // Given
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -446,7 +446,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertExistingWithCombineStrategy() async throws {
         // Given
-        class DirectMerger: DefaultMerger<TestItem> {
+        class DirectMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -462,7 +462,7 @@ final class MergerTests: XCTestCase {
         let existing = TestItem(id: UUID(), name: "Existing", value: 10)
         let new = TestItem(id: existing.id, name: "New", value: 20)
         
-        await merger.storage[existing.id] = existing
+        merger.storage[existing.id] = existing
         
         // When - upsert existing with combine strategy
         let upserted = try await merger.upsert(new, strategy: .combine)
@@ -636,7 +636,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertPathThroughSuper() async throws {
         // Given - Test that calling super.upsert works correctly
-        class SuperMerger: DefaultMerger<TestItem> {
+        class SuperMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             var callCount = 0
             
@@ -664,7 +664,7 @@ final class MergerTests: XCTestCase {
     
     func testDefaultMergerUpsertPathWithExistingThroughSuper() async throws {
         // Given
-        class SuperMerger: DefaultMerger<TestItem> {
+        class SuperMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             var storage: [UUID: TestItem] = [:]
             
             override func findExisting(by id: UUID) async -> TestItem? {
@@ -681,7 +681,7 @@ final class MergerTests: XCTestCase {
         let existing = TestItem(id: UUID(), name: "Existing", value: 10)
         let new = TestItem(id: existing.id, name: "New", value: 20)
         
-        await merger.storage[existing.id] = existing
+        merger.storage[existing.id] = existing
         
         // When - Upsert with existing item
         let upserted = try await merger.upsert(new, strategy: .preferNew)
@@ -706,7 +706,7 @@ final class MergerTests: XCTestCase {
         XCTAssertNotNil(merger)
         
         // Verify we can create a subclass that properly overrides it
-        class ProperMerger: DefaultMerger<TestItem> {
+        class ProperMerger: DefaultMerger<TestItem>, @unchecked Sendable {
             override func findExisting(by id: UUID) async -> TestItem? {
                 return nil
             }

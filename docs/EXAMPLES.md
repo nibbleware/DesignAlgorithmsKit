@@ -410,6 +410,10 @@ let data = "Hello, World!".data(using: .utf8)!
 let hash = SHA256.hash(data: data)
 print("SHA-256 hash: \(hash.map { String(format: "%02x", $0) }.joined())")
 
+// Using Data extension (New in 1.1.1)
+let hexHash = data.sha256Hex
+print("SHA-256 hex: \(hexHash)")
+
 // Hash string directly
 let stringHash = SHA256.hash(string: "Hello, World!")
 print("String hash: \(stringHash.map { String(format: "%02x", $0) }.joined())")
