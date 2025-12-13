@@ -123,8 +123,8 @@ final class HashComputationTests: XCTestCase {
         let data = "Test".data(using: .utf8)!
         
         XCTAssertThrowsError(try HashComputation.computeHashHex(data: data, algorithm: "invalid")) { error in
-            guard case HashComputationError.algorithmNotSupported(let alg) = error else {
-                XCTFail("Expected algorithmNotSupported error")
+            guard case HashError.algorithmNotImplemented(let alg) = error else {
+                XCTFail("Expected algorithmNotImplemented error")
                 return
             }
             XCTAssertEqual(alg, "invalid")
@@ -199,14 +199,14 @@ final class HashComputationTests: XCTestCase {
     
     // MARK: - Error Tests
     
-    func testHashComputationError_AlgorithmNotSupported() {
-        let error = HashComputationError.algorithmNotSupported("test-algorithm")
+    func testHashError_AlgorithmNotSupported() {
+        let error = HashError.algorithmNotImplemented("test-algorithm")
         
         XCTAssertEqual(error.errorDescription, "Hash algorithm 'test-algorithm' is not supported on this platform")
     }
     
-    func testHashComputationError_ComputationFailed() {
-        let error = HashComputationError.computationFailed("test error message")
+    func testHashError_ComputationFailed() {
+        let error = HashError.computationFailed("test error message")
         
         XCTAssertEqual(error.errorDescription, "Hash computation failed: test error message")
     }
