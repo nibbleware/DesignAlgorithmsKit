@@ -71,6 +71,16 @@ public struct HashComputation {
 }
 
 /// Generic error for hashing failures
-public enum HashError: Error {
+public enum HashError: LocalizedError {
     case algorithmNotImplemented(String)
+    case computationFailed(String)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .algorithmNotImplemented(let alg):
+            return "Hash algorithm '\(alg)' is not supported on this platform"
+        case .computationFailed(let reason):
+            return "Hash computation failed: \(reason)"
+        }
+    }
 }

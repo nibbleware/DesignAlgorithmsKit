@@ -34,7 +34,11 @@ public enum SingletonError: Error {
 ///
 /// ```swift
 /// class MySingleton: ThreadSafeSingleton {
-///     private init() {
+///     override class func createShared() -> MySingleton {
+///         return MySingleton()
+///     }
+///
+///     private override init() {
 ///         super.init()
 ///         // Initialize singleton
 ///     }

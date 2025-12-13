@@ -25,6 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
+## [1.1.1] - 2025-12-12
+
+### Added
+- `Data` extensions for convenient SHA256 hashing (`sha256`, `sha256Hex`)
+
+### Changed
+- Improved error handling in `HashComputation` to use `LocalizedError` with descriptive messages
+
+### Fixed
+- Fixed compiler warnings in `MergerTests` regarding `Sendable` conformance and unnecessary `await`
+- Fixed type mismatch errors in `HashComputationTests`
+
+
 ## [1.1.0] - 2025-12-04
 
 ### Added
