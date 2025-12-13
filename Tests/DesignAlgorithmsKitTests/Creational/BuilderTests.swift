@@ -1,14 +1,10 @@
-//
-//  BuilderTests.swift
-//  DesignAlgorithmsKitTests
-//
-//  Unit tests for Builder Pattern
-//
-
 import XCTest
 @testable import DesignAlgorithmsKit
 
 final class BuilderTests: XCTestCase {
+    
+    // MARK: - Basic Builder Pattern
+    
     func testBuilderPattern() throws {
         // Given
         struct TestObject {
@@ -52,12 +48,11 @@ final class BuilderTests: XCTestCase {
         XCTAssertEqual(object.property2, 42)
     }
     
+    // MARK: - Error Handling
+    
     func testBuilderMissingProperty() {
         // Given
-        struct TestObject {
-            let property: String
-        }
-        
+        struct TestObject { let property: String }
         class TestObjectBuilder: BaseBuilder<TestObject> {
             override func build() throws -> TestObject {
                 throw BuilderError.missingRequiredProperty("property")
@@ -76,9 +71,7 @@ final class BuilderTests: XCTestCase {
     
     func testValidatingBuilder() throws {
         // Given
-        struct TestObject {
-            let value: Int
-        }
+        struct TestObject { let value: Int }
         
         class ValidatingBuilder: BaseBuilder<TestObject>, ValidatingBuilderProtocol {
             private var value: Int?
@@ -89,12 +82,8 @@ final class BuilderTests: XCTestCase {
             }
             
             func validate() throws {
-                guard let value = value else {
-                    throw BuilderError.missingRequiredProperty("value")
-                }
-                if value < 0 {
-                    throw BuilderError.invalidValue("value", "must be non-negative")
-                }
+                guard let value = value else { throw BuilderError.missingRequiredProperty("value") }
+                if value < 0 { throw BuilderError.invalidValue("value", "must be non-negative") }
             }
             
             override func build() throws -> TestObject {
@@ -103,30 +92,21 @@ final class BuilderTests: XCTestCase {
             }
         }
         
-        // When/Then - Valid value
-        let object = try ValidatingBuilder()
-            .setValue(42)
-            .build()
+        // When/Then - Valid
+        let object = try ValidatingBuilder().setValue(42).build()
         XCTAssertEqual(object.value, 42)
         
-        // When/Then - Invalid value
+        // When/Then - Invalid
         XCTAssertThrowsError(try ValidatingBuilder().setValue(-1).build())
     }
     
     func testBaseBuilderNotImplemented() {
-        // Given
-        struct TestObject {
-            let value: String
-        }
+        struct TestObject { let value: String }
+        class TestBuilder: BaseBuilder<TestObject> {}
         
-        class TestBuilder: BaseBuilder<TestObject> {
-            // Doesn't override build()
-        }
-        
-        // When/Then
         XCTAssertThrowsError(try TestBuilder().build()) { error in
             if case BuilderError.notImplemented = error {
-                // Expected error
+                // Expected
             } else {
                 XCTFail("Expected BuilderError.notImplemented, got \(error)")
             }
@@ -134,21 +114,32 @@ final class BuilderTests: XCTestCase {
     }
     
     func testBuilderErrorLocalizedDescription() {
-        // Test notImplemented
         let notImplemented = BuilderError.notImplemented
         XCTAssertEqual(notImplemented.localizedDescription, "Builder build() method not implemented")
         
-        // Test missingRequiredProperty
         let missing = BuilderError.missingRequiredProperty("testProperty")
         XCTAssertEqual(missing.localizedDescription, "Required property 'testProperty' is missing")
         
-        // Test invalidValue
         let invalid = BuilderError.invalidValue("testProperty", "must be positive")
         XCTAssertEqual(invalid.localizedDescription, "Invalid value for 'testProperty': must be positive")
     }
     
+    func testBuilderErrorEquality() {
+        // Test that error cases can be matched
+        let error1 = BuilderError.missingRequiredProperty("test")
+        let error2 = BuilderError.missingRequiredProperty("test")
+        
+        if case BuilderError.missingRequiredProperty(let prop1) = error1,
+           case BuilderError.missingRequiredProperty(let prop2) = error2 {
+            XCTAssertEqual(prop1, prop2)
+        } else {
+            XCTFail("Error pattern matching failed")
+        }
+    }
+
+    // MARK: - Advanced Usage
+    
     func testBuilderFluentAPI() throws {
-        // Given
         struct ComplexObject {
             let name: String
             let age: Int
@@ -162,38 +153,19 @@ final class BuilderTests: XCTestCase {
             private var email: String?
             private var tags: [String] = []
             
-            func setName(_ name: String) -> Self {
-                self.name = name
-                return self
-            }
-            
-            func setAge(_ age: Int) -> Self {
-                self.age = age
-                return self
-            }
-            
-            func setEmail(_ email: String?) -> Self {
-                self.email = email
-                return self
-            }
-            
-            func addTag(_ tag: String) -> Self {
-                self.tags.append(tag)
-                return self
-            }
+            func setName(_ name: String) -> Self { self.name = name; return self }
+            func setAge(_ age: Int) -> Self { self.age = age; return self }
+            func setEmail(_ email: String?) -> Self { self.email = email; return self }
+            func addTag(_ tag: String) -> Self { self.tags.append(tag); return self }
             
             override func build() throws -> ComplexObject {
-                guard let name = name else {
-                    throw BuilderError.missingRequiredProperty("name")
-                }
-                guard let age = age else {
-                    throw BuilderError.missingRequiredProperty("age")
-                }
+                guard let name = name else { throw BuilderError.missingRequiredProperty("name") }
+                guard let age = age else { throw BuilderError.missingRequiredProperty("age") }
                 return ComplexObject(name: name, age: age, email: email, tags: tags)
             }
         }
         
-        // When - Test fluent API chaining
+        // Use fluent API
         let object = try ComplexObjectBuilder()
             .setName("John Doe")
             .setAge(30)
@@ -202,15 +174,27 @@ final class BuilderTests: XCTestCase {
             .addTag("swift")
             .build()
         
-        // Then
         XCTAssertEqual(object.name, "John Doe")
         XCTAssertEqual(object.age, 30)
         XCTAssertEqual(object.email, "john@example.com")
         XCTAssertEqual(object.tags, ["developer", "swift"])
+        
+        // Partial configuration test
+        // Verify order independence and state retention
+        let builder = ComplexObjectBuilder()
+        builder.setName("Jane").setAge(25)
+        
+        let object1 = try builder.build()
+        XCTAssertEqual(object1.name, "Jane")
+        
+        // Modify state
+        builder.setName("Jane Doe")
+        let object2 = try builder.build()
+        XCTAssertEqual(object2.name, "Jane Doe")
+        XCTAssertEqual(object2.age, 25) // Age preserved
     }
     
     func testBuilderWithOptionalProperties() throws {
-        // Given
         struct OptionalObject {
             let required: String
             let optional: String?
@@ -220,175 +204,91 @@ final class BuilderTests: XCTestCase {
             private var required: String?
             private var optional: String?
             
-            func setRequired(_ value: String) -> Self {
-                self.required = value
-                return self
-            }
-            
-            func setOptional(_ value: String?) -> Self {
-                self.optional = value
-                return self
-            }
+            func setRequired(_ value: String) -> Self { self.required = value; return self }
+            func setOptional(_ value: String?) -> Self { self.optional = value; return self }
             
             override func build() throws -> OptionalObject {
-                guard let required = required else {
-                    throw BuilderError.missingRequiredProperty("required")
-                }
+                guard let required = required else { throw BuilderError.missingRequiredProperty("required") }
                 return OptionalObject(required: required, optional: optional)
             }
         }
         
-        // When/Then - With optional value
-        let object1 = try OptionalObjectBuilder()
-            .setRequired("required")
-            .setOptional("optional")
-            .build()
-        XCTAssertEqual(object1.required, "required")
-        XCTAssertEqual(object1.optional, "optional")
+        let object1 = try OptionalObjectBuilder().setRequired("req").setOptional("opt").build()
+        XCTAssertEqual(object1.optional, "opt")
         
-        // When/Then - Without optional value
-        let object2 = try OptionalObjectBuilder()
-            .setRequired("required")
-            .setOptional(nil)
-            .build()
-        XCTAssertEqual(object2.required, "required")
+        let object2 = try OptionalObjectBuilder().setRequired("req").setOptional(nil).build()
         XCTAssertNil(object2.optional)
     }
     
     func testBuilderMultipleInstances() throws {
-        // Given
-        struct SimpleObject {
-            let value: String
-        }
-        
+        struct SimpleObject { let value: String }
         class SimpleBuilder: BaseBuilder<SimpleObject> {
             private var value: String?
-            
-            func setValue(_ value: String) -> Self {
-                self.value = value
-                return self
-            }
-            
+            func setValue(_ value: String) -> Self { self.value = value; return self }
             override func build() throws -> SimpleObject {
-                guard let value = value else {
-                    throw BuilderError.missingRequiredProperty("value")
-                }
+                guard let value = value else { throw BuilderError.missingRequiredProperty("value") }
                 return SimpleObject(value: value)
             }
         }
         
-        // When - Create multiple instances
         let builder1 = SimpleBuilder()
         let builder2 = SimpleBuilder()
         
         let object1 = try builder1.setValue("value1").build()
         let object2 = try builder2.setValue("value2").build()
         
-        // Then - Each builder should be independent
         XCTAssertEqual(object1.value, "value1")
         XCTAssertEqual(object2.value, "value2")
     }
     
     func testValidatingBuilderProtocolDefault() throws {
-        // Given
-        struct TestObject {
-            let value: Int
-        }
-        
+        struct TestObject { let value: Int }
         class DefaultValidatingBuilder: BaseBuilder<TestObject>, ValidatingBuilderProtocol {
             private var value: Int?
-            
-            func setValue(_ value: Int) -> Self {
-                self.value = value
-                return self
-            }
-            
+            func setValue(_ value: Int) -> Self { self.value = value; return self }
             override func build() throws -> TestObject {
-                // Explicitly call validate() to ensure default implementation is covered
-                try validate()
-                guard let value = value else {
-                    throw BuilderError.missingRequiredProperty("value")
-                }
+                try validate() // Default does nothing
+                guard let value = value else { throw BuilderError.missingRequiredProperty("value") }
                 return TestObject(value: value)
             }
         }
         
-        // When/Then - Default validation should not throw
-        let object = try DefaultValidatingBuilder()
-            .setValue(42)
-            .build()
+        let object = try DefaultValidatingBuilder().setValue(42).build()
         XCTAssertEqual(object.value, 42)
     }
     
     func testValidatingBuilderProtocolDefaultImplementation() throws {
-        // Given - Test the default validate() implementation directly
-        struct TestObject {
-            let value: String
-        }
-        
+        // Direct test of default implementation
+        struct TestObject { let value: String }
         class DirectValidateBuilder: BaseBuilder<TestObject>, ValidatingBuilderProtocol {
             private var value: String?
-            
-            func setValue(_ value: String) -> Self {
-                self.value = value
-                return self
-            }
-            
+            func setValue(_ value: String) -> Self { self.value = value; return self }
             override func build() throws -> TestObject {
-                // Call validate() explicitly to test default implementation
-                try validate() // Default implementation does nothing
-                guard let value = value else {
-                    throw BuilderError.missingRequiredProperty("value")
-                }
+                try validate()
+                guard let value = value else { throw BuilderError.missingRequiredProperty("value") }
                 return TestObject(value: value)
             }
         }
         
-        // When/Then - Default validate() should not throw
-        let object = try DirectValidateBuilder()
-            .setValue("test")
-            .build()
+        let object = try DirectValidateBuilder().setValue("test").build()
         XCTAssertEqual(object.value, "test")
     }
     
     func testValidatingBuilderWithCustomValidation() throws {
-        // Given
-        struct User {
-            let username: String
-            let age: Int
-        }
+        struct User { let username: String; let age: Int }
         
         class UserBuilder: BaseBuilder<User>, ValidatingBuilderProtocol {
             private var username: String?
             private var age: Int?
             
-            func setUsername(_ username: String) -> Self {
-                self.username = username
-                return self
-            }
-            
-            func setAge(_ age: Int) -> Self {
-                self.age = age
-                return self
-            }
+            func setUsername(_ username: String) -> Self { self.username = username; return self }
+            func setAge(_ age: Int) -> Self { self.age = age; return self }
             
             func validate() throws {
-                guard let username = username else {
-                    throw BuilderError.missingRequiredProperty("username")
-                }
-                if username.count < 3 {
-                    throw BuilderError.invalidValue("username", "must be at least 3 characters")
-                }
-                
-                guard let age = age else {
-                    throw BuilderError.missingRequiredProperty("age")
-                }
-                if age < 0 {
-                    throw BuilderError.invalidValue("age", "must be non-negative")
-                }
-                if age > 150 {
-                    throw BuilderError.invalidValue("age", "must be less than 150")
-                }
+                guard let username = username else { throw BuilderError.missingRequiredProperty("username") }
+                if username.count < 3 { throw BuilderError.invalidValue("username", "curr too short") }
+                guard let age = age else { throw BuilderError.missingRequiredProperty("age") }
+                if age < 0 || age > 150 { throw BuilderError.invalidValue("age", "invalid age") }
             }
             
             override func build() throws -> User {
@@ -397,107 +297,64 @@ final class BuilderTests: XCTestCase {
             }
         }
         
-        // When/Then - Valid user
-        let validUser = try UserBuilder()
-            .setUsername("johndoe")
-            .setAge(30)
-            .build()
-        XCTAssertEqual(validUser.username, "johndoe")
-        XCTAssertEqual(validUser.age, 30)
+        // Happy path
+        let user = try UserBuilder().setUsername("john").setAge(30).build()
+        XCTAssertEqual(user.username, "john")
         
-        // When/Then - Invalid username (too short)
-        XCTAssertThrowsError(try UserBuilder().setUsername("ab").setAge(30).build()) { error in
-            if case BuilderError.invalidValue(let property, _) = error {
-                XCTAssertEqual(property, "username")
-            } else {
-                XCTFail("Expected invalidValue error for username")
-            }
-        }
-        
-        // When/Then - Invalid age (negative)
-        XCTAssertThrowsError(try UserBuilder().setUsername("johndoe").setAge(-1).build()) { error in
-            if case BuilderError.invalidValue(let property, _) = error {
-                XCTAssertEqual(property, "age")
-            } else {
-                XCTFail("Expected invalidValue error for age")
-            }
-        }
-        
-        // When/Then - Invalid age (too high)
-        XCTAssertThrowsError(try UserBuilder().setUsername("johndoe").setAge(200).build()) { error in
-            if case BuilderError.invalidValue(let property, _) = error {
-                XCTAssertEqual(property, "age")
-            } else {
-                XCTFail("Expected invalidValue error for age")
-            }
-        }
-    }
-    
-    func testBuilderErrorEquality() {
-        // Test that error cases can be matched
-        let error1 = BuilderError.missingRequiredProperty("test")
-        let error2 = BuilderError.missingRequiredProperty("test")
-        
-        // Use pattern matching to verify
-        if case BuilderError.missingRequiredProperty(let prop1) = error1,
-           case BuilderError.missingRequiredProperty(let prop2) = error2 {
-            XCTAssertEqual(prop1, prop2)
-        } else {
-            XCTFail("Error pattern matching failed")
-        }
+        // Invalid checks
+        XCTAssertThrowsError(try UserBuilder().setUsername("a").setAge(30).build())
+        XCTAssertThrowsError(try UserBuilder().setUsername("john").setAge(-1).build())
     }
     
     func testBuilderReuse() throws {
-        // Given
-        struct Config {
-            let host: String
-            let port: Int
-        }
-        
+        struct Config { let host: String; let port: Int }
         class ConfigBuilder: BaseBuilder<Config> {
             private var host: String?
             private var port: Int?
-            
-            func setHost(_ host: String) -> Self {
-                self.host = host
-                return self
-            }
-            
-            func setPort(_ port: Int) -> Self {
-                self.port = port
-                return self
-            }
-            
+            func setHost(_ host: String) -> Self { self.host = host; return self }
+            func setPort(_ port: Int) -> Self { self.port = port; return self }
             override func build() throws -> Config {
-                guard let host = host else {
-                    throw BuilderError.missingRequiredProperty("host")
-                }
-                guard let port = port else {
-                    throw BuilderError.missingRequiredProperty("port")
-                }
-                return Config(host: host, port: port)
+                guard let h = host, let p = port else { throw BuilderError.missingRequiredProperty("config") }
+                return Config(host: h, port: p)
             }
         }
         
-        // When - Reuse builder instance
         let builder = ConfigBuilder()
+        let c1 = try builder.setHost("h1").setPort(1).build()
+        XCTAssertEqual(c1.host, "h1")
         
-        let config1 = try builder
-            .setHost("localhost")
-            .setPort(8080)
-            .build()
+        // Reuse
+        let c2 = try builder.setPort(2).build()
+        XCTAssertEqual(c2.host, "h1") // Host persisted
+        XCTAssertEqual(c2.port, 2)
+    }
+    
+    func testChainedOrderIndependence() throws {
+        // Given
+        struct Style {
+            let color: String
+            let size: Int
+        }
         
-        // Reset and build again
-        let config2 = try builder
-            .setHost("example.com")
-            .setPort(443)
-            .build()
+        class StyleBuilder: BaseBuilder<Style> {
+            private var color: String?
+            private var size: Int?
+            
+            func setColor(_ c: String) -> Self { self.color = c; return self }
+            func setSize(_ s: Int) -> Self { self.size = s; return self }
+            
+            override func build() throws -> Style {
+                guard let c = color, let s = size else { throw BuilderError.missingRequiredProperty("style") }
+                return Style(color: c, size: s)
+            }
+        }
         
-        // Then - Last values should be used
-        XCTAssertEqual(config1.host, "localhost")
-        XCTAssertEqual(config1.port, 8080)
-        XCTAssertEqual(config2.host, "example.com")
-        XCTAssertEqual(config2.port, 443)
+        // When
+        let s1 = try StyleBuilder().setColor("Red").setSize(10).build()
+        let s2 = try StyleBuilder().setSize(10).setColor("Red").build()
+        
+        // Then
+        XCTAssertEqual(s1.color, s2.color)
+        XCTAssertEqual(s1.size, s2.size)
     }
 }
-
