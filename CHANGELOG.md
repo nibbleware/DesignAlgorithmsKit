@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed compiler warnings in `MergerTests` regarding `Sendable` conformance and unnecessary `await`
 - Fixed type mismatch errors in `HashComputationTests`
 
-## [1.3.0] - 2025-12-12
+## [v1.3.0] - 2025-12-12
 
 ### Changed
 - Bumped version to 1.3.0
