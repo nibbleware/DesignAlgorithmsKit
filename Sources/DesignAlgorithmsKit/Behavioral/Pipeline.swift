@@ -97,3 +97,75 @@ open class AsyncDataPipeline<Input, Output> {
         }
     }
 }
+
+// MARK: - Type-Erased Pipelines (AnyPipeline)
+
+/// A type-erased async pipeline stage that operates on Any input/output.
+/// Useful for dynamic pipelines where stages are assembled at runtime.
+public struct AnyAsyncPipelineStage: AsyncDataPipelineStage {
+    public typealias Input = Any
+    public typealias Output = Any
+    
+    private let _process: (Any) async throws -> Any
+    
+    public init<S: AsyncDataPipelineStage>(_ stage: S) {
+        self._process = { input in
+            guard let typedInput = input as? S.Input else {
+                throw PipelineError.invalidInputType(expected: String(describing: S.Input.self), actual: String(describing: type(of: input)))
+            }
+            return try await stage.process(typedInput)
+        }
+    }
+    
+    public init(process: @escaping (Any) async throws -> Any) {
+        self._process = process
+    }
+    
+    public func process(_ input: Any) async throws -> Any {
+        return try await _process(input)
+    }
+}
+
+/// Errors thrown by the pipeline
+public enum PipelineError: Error, LocalizedError {
+    case invalidInputType(expected: String, actual: String)
+    case stageFailure(stageIndex: Int, underlyingError: Error)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .invalidInputType(let expected, let actual):
+            return "Pipeline stage expected input of type '\(expected)' but received '\(actual)'."
+        case .stageFailure(let index, let error):
+            return "Pipeline execution failed at stage \(index): \(error.localizedDescription)"
+        }
+    }
+}
+
+/// A pipeline builder that chains type-erased stages dynamically.
+public class DynamicAsyncPipeline {
+    private var stages: [AnyAsyncPipelineStage] = []
+    
+    public init() {}
+    
+    public func append(_ stage: AnyAsyncPipelineStage) {
+        stages.append(stage)
+    }
+    
+    public func append<S: AsyncDataPipelineStage>(_ stage: S) {
+        stages.append(AnyAsyncPipelineStage(stage))
+    }
+    
+    public func execute(input: Any) async throws -> Any {
+        var currentData = input
+        
+        for (index, stage) in stages.enumerated() {
+            do {
+                currentData = try await stage.process(currentData)
+            } catch {
+                throw PipelineError.stageFailure(stageIndex: index, underlyingError: error)
+            }
+        }
+        
+        return currentData
+    }
+}
