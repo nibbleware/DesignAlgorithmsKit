@@ -24,8 +24,6 @@ let package = Package(
             path: "Sources/DesignAlgorithmsKit",
             exclude: [
                 // Exclude hash/crypto types for WASM builds (they use NSLock)
-                "Algorithms/DataStructures/BloomFilter.swift",
-                "Algorithms/DataStructures/MerkleTree.swift",
                 "Algorithms/WASMGuard.swift"
             ]
         ),
