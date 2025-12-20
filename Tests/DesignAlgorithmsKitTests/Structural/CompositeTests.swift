@@ -127,4 +127,28 @@ final class CompositeTests: XCTestCase {
         
         XCTAssertTrue(leaf.operationCalled)
     }
+    
+    func testBaseComponentDefaults() {
+        let base = BaseComponent()
+        
+        // Should not crash and do nothing
+        base.operation()
+        
+        // Should not store anything
+        let child = BaseComponent()
+        base.add(child)
+        XCTAssertNil(base.getChild(at: 0))
+        
+        base.remove(child) // Should do nothing
+    }
+    
+    func testGetChildOutOfBounds() {
+        let root = TestComposite(name: "root")
+        let child = TestLeaf(name: "child")
+        root.add(child)
+        
+        XCTAssertNil(root.getChild(at: -1))
+        XCTAssertNil(root.getChild(at: 1))
+        XCTAssertNotNil(root.getChild(at: 0))
+    }
 }

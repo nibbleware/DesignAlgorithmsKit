@@ -65,4 +65,22 @@ final class GenericRegistryTests: XCTestCase {
         // Verify random element
         XCTAssertEqual(registry.get(500), 500)
     }
+    
+    func testSubscript() {
+        let registry = Registry<String, Int>()
+        
+        // Set via subscript
+        registry["key1"] = 100
+        XCTAssertEqual(registry.get("key1"), 100)
+        XCTAssertEqual(registry["key1"], 100)
+        
+        // Update via subscript
+        registry["key1"] = 200
+        XCTAssertEqual(registry["key1"], 200)
+        
+        // Remove via subscript
+        registry["key1"] = nil
+        XCTAssertNil(registry["key1"])
+        XCTAssertFalse(registry.all().contains(200))
+    }
 }

@@ -35,5 +35,25 @@ final class ThreadSafeTests: XCTestCase {
         XCTAssertEqual(safeCounter.read { $0 }, iterations)
     }
     
-
+    func testRawValueAccess() {
+        let safeInt = ThreadSafe(100)
+        
+        // Getter
+        XCTAssertEqual(safeInt.rawValue, 100)
+        
+        // Setter
+        safeInt.rawValue = 200
+        XCTAssertEqual(safeInt.read{ $0 }, 200)
+        
+        // Setter works with lock
+        let group = DispatchGroup()
+        for i in 0..<100 {
+            group.enter()
+            DispatchQueue.global().async {
+                safeInt.rawValue = i
+                group.leave()
+            }
+        }
+        group.wait()
+    }
 }

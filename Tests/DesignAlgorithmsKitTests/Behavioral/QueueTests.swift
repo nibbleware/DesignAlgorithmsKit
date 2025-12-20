@@ -473,5 +473,60 @@ final class QueueTests: XCTestCase {
         let completed = await queue.completedItems
         XCTAssertGreaterThanOrEqual(completed.count, 0) // May have completed
     }
+    
+    func testProcessingFailure() async {
+        // Given
+        let processor = TestProcessor()
+        await processor.setShouldFail(true)
+        let queue = ProcessingQueue<TestItem, TestProcessor>(processor: processor, maxConcurrent: 1)
+        
+        let item1 = TestItem(id: UUID(), data: "data1")
+        
+        // When
+        await queue.add([item1])
+        
+        // Wait for processing
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        
+        // Then
+        let failed = await queue.failedItems
+        XCTAssertEqual(failed.count, 1)
+        XCTAssertEqual(failed[0].id, item1.id)
+    }
+    
+    func testRemoveWhileProcessing() async {
+        // Given
+        let processor = TestProcessor()
+        await processor.setProcessingDelay(0.5) // Slow processing
+        let queue = ProcessingQueue<TestItem, TestProcessor>(processor: processor, maxConcurrent: 1)
+        
+        let item1 = TestItem(id: UUID(), data: "data1")
+        await queue.add([item1])
+        
+        // Wait to start processing
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        
+        // Verify it is processing
+        let processing = await queue.processingItems
+        XCTAssertEqual(processing.count, 1)
+        
+        // When - remove while processing
+        await queue.remove(id: item1.id)
+        
+        // Then - should be removed immediately
+        let items = await queue.items
+        XCTAssertEqual(items.count, 0)
+        
+        // Wait for task to theoretically finish/cancel
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        
+        // Verify processor processed items (cancellation might prevent 'processedItems' append)
+        // This depends on where cancellation hits. 
+        // Process is: sleep 0.5s -> check fail -> append.
+        // Task.cancel() makes sleep throw CancellationError.
+        // So 'processedItems' should NOT contain the item.
+        let processed = await processor.getProcessedItems()
+        XCTAssertFalse(processed.contains(item1.id))
+    }
 }
 

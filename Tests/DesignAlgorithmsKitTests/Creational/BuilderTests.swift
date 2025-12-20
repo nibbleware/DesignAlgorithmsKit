@@ -182,13 +182,13 @@ final class BuilderTests: XCTestCase {
         // Partial configuration test
         // Verify order independence and state retention
         let builder = ComplexObjectBuilder()
-        builder.setName("Jane").setAge(25)
+        _ = builder.setName("Jane").setAge(25)
         
         let object1 = try builder.build()
         XCTAssertEqual(object1.name, "Jane")
         
         // Modify state
-        builder.setName("Jane Doe")
+        _ = builder.setName("Jane Doe")
         let object2 = try builder.build()
         XCTAssertEqual(object2.name, "Jane Doe")
         XCTAssertEqual(object2.age, 25) // Age preserved

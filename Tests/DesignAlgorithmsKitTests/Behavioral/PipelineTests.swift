@@ -44,25 +44,26 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(result, "10")
     }
     
-    enum PipelineError: Error {
-        case stageFailure
-    }
     
     func testSyncPipelineErrorPropagation() {
         let pipeline = DataPipeline<Int, Int> { _ in
-            throw PipelineError.stageFailure
+            throw PipelineError.stageFailure(stageIndex: 0, underlyingError: NSError(domain: "test", code: 1))
         }
         .appending { $0 + 1 }
         
         XCTAssertThrowsError(try pipeline.execute(1)) { error in
-            XCTAssertEqual(error as? PipelineError, .stageFailure)
+            if case let PipelineError.stageFailure(index, _) = error {
+                XCTAssertEqual(index, 0)
+            } else {
+                XCTFail("Wrong error type")
+            }
         }
     }
     
     func testSyncPipelineMidChainFailure() {
         let pipeline = DataPipeline<Int, Int> { $0 * 2 }
             .appending { val -> Int in
-                if val == 4 { throw PipelineError.stageFailure }
+                if val == 4 { throw PipelineError.stageFailure(stageIndex: 1, underlyingError: NSError(domain: "test", code: 1)) }
                 return val
             }
             .appending { String($0) }
@@ -117,14 +118,75 @@ final class PipelineTests: XCTestCase {
     
     func testAsyncPipelineErrorPropagation() async {
         let pipeline = AsyncDataPipeline<Int, Int> { _ in
-            throw PipelineError.stageFailure
+            throw PipelineError.stageFailure(stageIndex: 0, underlyingError: NSError(domain: "test", code: 1))
         }
         
         do {
             _ = try await pipeline.execute(1)
             XCTFail("Should have thrown error")
         } catch {
-            XCTAssertEqual(error as? PipelineError, .stageFailure)
+            if case let PipelineError.stageFailure(index, _) = error {
+                XCTAssertEqual(index, 0)
+            } else {
+                XCTFail("Wrong error type: \(error)")
+            }
         }
+    }
+    
+    // MARK: - Dynamic Pipeline Tests
+    
+    func testDynamicAsyncPipeline() async throws {
+        let pipeline = DynamicAsyncPipeline()
+        
+        let stage1 = AnyAsyncPipelineStage(process: { (input: Any) async throws -> Any in
+            guard let intInput = input as? Int else { throw PipelineError.invalidInputType(expected: "Int", actual: String(describing: type(of: input))) }
+            return intInput * 2
+        })
+        
+        let stage2 = AnyAsyncPipelineStage(process: { (input: Any) async throws -> Any in
+            guard let intInput = input as? Int else { throw PipelineError.invalidInputType(expected: "Int", actual: String(describing: type(of: input))) }
+            return String(intInput)
+        })
+        
+        pipeline.append(stage1)
+        pipeline.append(stage2)
+        
+        let result = try await pipeline.execute(input: 10)
+        
+        XCTAssertEqual(result as? String, "20")
+    }
+    
+    func testDynamicAsyncPipelineWithTypedStage() async throws {
+        let pipeline = DynamicAsyncPipeline()
+        pipeline.append(IntToStringAsyncStage()) // Typed stage
+        
+        let result = try await pipeline.execute(input: 50)
+        XCTAssertEqual(result as? String, "50")
+    }
+    
+    func testDynamicAsyncPipelineTypeMismatch() async {
+        let pipeline = DynamicAsyncPipeline()
+        pipeline.append(IntToStringAsyncStage())
+        
+        do {
+            _ = try await pipeline.execute(input: "NotAnInt")
+            XCTFail("Should fail due to type mismatch")
+        } catch {
+            if case let PipelineError.stageFailure(_, underlyingError) = error,
+               case PipelineError.invalidInputType = underlyingError {
+                // Success
+            } else {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+    }
+    
+    func testRefinedErrorDescription() {
+        let error1 = PipelineError.invalidInputType(expected: "Int", actual: "String")
+        XCTAssertEqual(error1.localizedDescription, "Pipeline stage expected input of type 'Int' but received 'String'.")
+        
+        let underlying = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Underlying fail"])
+        let error2 = PipelineError.stageFailure(stageIndex: 2, underlyingError: underlying)
+        XCTAssertEqual(error2.localizedDescription, "Pipeline execution failed at stage 2: Underlying fail")
     }
 }
