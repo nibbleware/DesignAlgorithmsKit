@@ -33,7 +33,7 @@ public extension HashAlgorithmProtocol {
     /// - Returns: Hash value as Data, or empty Data if UTF-8 conversion fails
     /// - Note: UTF-8 conversion failure returns empty Data, which will hash to a valid hash value.
     ///   This path is testable by creating strings that fail UTF-8 conversion (rare but possible).
-    public static func hash(string: String) -> Data {
+    static func hash(string: String) -> Data {
         guard let data = string.data(using: .utf8) else {
             // UTF-8 conversion failed - return hash of empty data
             // This is a valid fallback that ensures we always return a hash
