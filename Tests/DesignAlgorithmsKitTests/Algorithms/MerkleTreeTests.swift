@@ -3,10 +3,8 @@
 //  DesignAlgorithmsKitTests
 //
 //  Unit tests for Merkle Tree
-//  NOTE: Tests disabled as MerkleTree.swift is excluded from the package
 //
 
-/*
 import XCTest
 @testable import DesignAlgorithmsKit
 
@@ -116,4 +114,3 @@ final class MerkleTreeTests: XCTestCase {
         XCTAssertFalse(tree.rootHash.isEmpty)
     }
 }
-*/

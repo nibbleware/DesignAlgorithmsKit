@@ -176,7 +176,7 @@ open class Registry<Key: Hashable, Value>: @unchecked Sendable {
     /// Unregister a key
     /// - Parameter key: Key to remove
     open func unregister(_ key: Key) {
-        storage.write { $0.removeValue(forKey: key) }
+        _ = storage.write { $0.removeValue(forKey: key) }
     }
     
     /// Get all values

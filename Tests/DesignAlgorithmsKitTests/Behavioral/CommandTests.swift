@@ -135,4 +135,11 @@ final class CommandTests: XCTestCase {
         invoker.undo() // cmd1
         XCTAssertEqual(cmd1.undoCount, 1)
     }
+    
+    func testBaseCommandDefaults() {
+        let base = BaseCommand()
+        // Should not crash
+        base.execute()
+        base.undo()
+    }
 }
