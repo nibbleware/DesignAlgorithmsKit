@@ -25,6 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
+## [1.7.0] - 2025-12-21
+
+### Added
+- `UUIDv5Generator` for deterministic UUID generation from namespace and name
+
+### Fixed
+- Fixed compiler warnings in `JobManager.swift` (removed unnecessary `await`)
+
+### Changed
+- Improved test coverage for `Singleton`, `Merger`, `TaskOrchestrator`, and `HashAlgorithmProtocol`
+
 ## [v1.4.1] - 2025-12-13
 
 ### Added
