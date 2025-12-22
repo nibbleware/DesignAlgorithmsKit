@@ -193,9 +193,9 @@ public actor JobManager {
     private func execute(id: UUID, operation: @escaping @Sendable () async throws -> JobOutput) async {
         do {
             let result = try await operation()
-            await complete(id: id, result: result)
+            complete(id: id, result: result)
         } catch {
-            await fail(id: id, error: error)
+            fail(id: id, error: error)
         }
     }
     
