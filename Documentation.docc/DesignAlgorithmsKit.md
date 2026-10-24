@@ -15,20 +15,20 @@ All patterns and algorithms follow consistent implementation guidelines for main
 ### Design Patterns
 
 #### Creational Patterns
-- ``Singleton`` - Thread-safe singleton implementations
-- ``Factory`` - Object creation without specifying concrete classes
-- ``Builder`` - Step-by-step object construction with fluent API
+- ``ThreadSafeSingleton`` - Thread-safe singleton base class
+- ``ObjectFactory`` - Object creation without specifying concrete classes
+- ``BaseBuilder`` - Step-by-step object construction
 
 #### Structural Patterns
-- ``Facade`` - Simplified interface to complex subsystems
-- ``Adapter`` - Adapting interfaces to client expectations
+- ``BaseFacade`` - Simplified interface to complex subsystems
+- ``BaseAdapter`` - Adapting interfaces to client expectations
 
 #### Behavioral Patterns
-- ``Strategy`` - Interchangeable algorithms
-- ``Observer`` - Event notification and subscription
+- ``StrategyContext`` - Interchangeable algorithms
+- ``BaseObservable`` - Event notification and subscription
 
 #### Modern Patterns
-- ``Registry`` - Centralized type registration and discovery
+- ``TypeRegistry`` / ``Registry`` - Centralized type and value registration
 
 ### Algorithms & Data Structures
 
@@ -38,7 +38,8 @@ All patterns and algorithms follow consistent implementation guidelines for main
 - ``CountingBloomFilter`` - Bloom Filter variant that supports element removal
 
 #### Hashing
-- ``HashAlgorithm`` - Protocol for hash algorithms
+- ``HashAlgorithm`` - Supported hash algorithms (SHA-256, SHA-1, MD5, CRC-32)
+- ``HashComputation`` - Hash computation helpers
 - ``SHA256`` - SHA-256 hash algorithm implementation
 
 ## Getting Started
@@ -47,13 +48,13 @@ Add DesignAlgorithmsKit to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/rickhohler/DesignAlgorithmsKit.git", from: "1.0.0")
+    .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.0.0")
 ]
 ```
 
 ## See Also
 
-- [GitHub Repository](https://github.com/rickhohler/DesignAlgorithmsKit)
+- [GitHub Repository](https://github.com/nibbleware/DesignAlgorithmsKit)
 - [Design Patterns Guide](https://en.wikipedia.org/wiki/Design_Patterns)
 - [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree)
 - [Bloom Filter](https://en.wikipedia.org/wiki/Bloom_filter)

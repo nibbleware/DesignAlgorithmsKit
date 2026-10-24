@@ -6,3 +6,7 @@
 DerivedData
 .idea/
 *.xcodeproj/xcuserdata
+.swiftpm/xcode/xcuserdata/
+xcuserdata/
+*.log
+test_output*.txt
