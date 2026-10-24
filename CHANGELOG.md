@@ -7,23 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- N/A
-
 ### Changed
-- N/A
-
-### Deprecated
-- N/A
+- README rewritten to match the code: purpose, products, platforms, dependencies, build/test, known issues
 
 ### Removed
-- N/A
+- `docs/DESIGN_PATTERNS.md` and `docs/EXAMPLES.md` (examples used APIs that do not exist; superseded by the README)
+- Committed `.swiftpm/xcode/xcuserdata` (now git-ignored)
 
-### Fixed
-- N/A
-
-### Security
-- N/A
+### Notes
+- Releases v1.8.0 (FilenameTokenizer, UUIDv5Generator), v1.9.0 (Visitor, Graph, Gzip) and v1.10.0 were tagged without CHANGELOG entries; backfill is tracked in `platform-and-test-hygiene`
 
 ## [1.7.0] - 2025-12-21
 
@@ -43,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Boosted unit test coverage across multiple patterns (Builder, Factory, Adapter, Facade, Observer, Strategy)
-- Added `AGENTS.md` release/tagging guideline documentation
 
 ## [v1.4.0] - 2025-12-12
 
