@@ -7,8 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-24
+
+### Added
+- `Zlib` and `ZlibError`: in-memory zlib, gzip and raw DEFLATE compression/decompression with framing selected by window bits (`Zlib.Framing`), using `import zlib`
+- `CRC32Checksum`: CRC-32 as `UInt32` with incremental `update(_:with:)`
+- `FallbackTextDecoder`, `TextDecodingStrategy`, `StringEncodingStrategy`, `DecodedText`, `TextDecoderRegistry` and `Data.decodedText(using:)`: decode bytes of unknown encoding (US-ASCII, UTF-8, Mac OS Roman, Windows-1252) with pluggable strategies and control-character stripping
+
 ### Changed
+- `Gzip` is built on `Zlib`; the `@_silgen_name` zlib proxy and hand-written `z_stream` layout are removed
+- `CRC32Strategy` uses `CRC32Checksum`
+- `DesignAlgorithmsKit.version` is `1.11.0`
 - README rewritten to match the code: purpose, products, platforms, dependencies, build/test, known issues
+
+### Fixed
+- `Gzip.compress` no longer overflows an integer literal on 32-bit targets
 
 ### Removed
 - `docs/DESIGN_PATTERNS.md` and `docs/EXAMPLES.md` (examples used APIs that do not exist; superseded by the README)
