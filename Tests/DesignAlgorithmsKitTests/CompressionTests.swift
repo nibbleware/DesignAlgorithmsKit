@@ -48,4 +48,42 @@ final class CompressionTests: XCTestCase {
         let decompressed = try Gzip.decompress(data: compressed)
         XCTAssertTrue(decompressed.isEmpty)
     }
+
+    // MARK: - Trailer verification (fix-algorithm-edge-cases)
+
+    private func sample() throws -> Data {
+        try Gzip.compress(data: Data(String(repeating: "trailer check ", count: 20).utf8))
+    }
+
+    func testCorruptedCRCThrows() throws {
+        var data = try sample()
+        data[data.count - 8] ^= 0xFF
+        XCTAssertThrowsError(try Gzip.decompress(data: data)) { error in
+            XCTAssertEqual(error as? Gzip.Error, .invalidData)
+        }
+    }
+
+    func testCorruptedISizeThrows() throws {
+        var data = try sample()
+        data[data.count - 1] ^= 0x01
+        XCTAssertThrowsError(try Gzip.decompress(data: data)) { error in
+            XCTAssertEqual(error as? Gzip.Error, .invalidData)
+        }
+    }
+
+    func testExtraFieldLengthIsLittleEndian() throws {
+        let plain = try sample()
+        // Rebuild with FEXTRA set and a 3-byte extra field (XLEN = 03 00).
+        var data = Data(plain[0..<10])
+        data[3] |= 0x04
+        data.append(contentsOf: [0x03, 0x00, 0xAA, 0xBB, 0xCC])
+        data.append(plain[10...])
+        XCTAssertEqual(try Gzip.decompress(data: data), try Gzip.decompress(data: plain))
+    }
+
+    func testDecompressesSlice() throws {
+        let plain = try sample()
+        let padded = Data([0x00, 0x00]) + plain
+        XCTAssertEqual(try Gzip.decompress(data: padded[2...]), try Gzip.decompress(data: plain))
+    }
 }

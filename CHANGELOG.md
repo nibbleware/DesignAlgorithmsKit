@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (`fix-algorithm-edge-cases`)
+- `MerkleTree.generateProof(for:)` adds a path entry for an unpaired node (its own hash as the right sibling), so proofs verify for every leaf of trees with an odd node count. Roots are unchanged.
+- `BloomFilter` and `CountingBloomFilter` no longer trap on degenerate sizing: a capacity below 1 counts as 1 and the false-positive rate is clamped into (0, 1). `capacity` and `falsePositiveRate` report the clamped values.
+- `Int.bloomHash()` uses the two's-complement bit pattern and no longer traps for negative values.
+- `Gzip.decompress` verifies the CRC-32 and ISIZE trailer and throws `Gzip.Error.invalidData` on mismatch; XLEN is read little-endian; `Data` slices are accepted.
+
 ## [1.11.0] - 2026-10-24
 
 ### Added

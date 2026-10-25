@@ -192,9 +192,10 @@ public struct MerkleTree {
             
             // Check left subtree
             if traverse(node: node.left, targetHash: targetHash) {
-                // Add right sibling to path
-                if let right = node.right {
-                    path.append(MerkleProofNode(hash: right.hash, isLeft: false))
+                // Add right sibling to path. An unpaired node was hashed with itself, so its own
+                // hash stands in as the sibling.
+                if let sibling = node.right ?? node.left {
+                    path.append(MerkleProofNode(hash: sibling.hash, isLeft: false))
                 }
                 return true
             }
