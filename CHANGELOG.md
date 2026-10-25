@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (`relocate-binary-readers-into-dak`)
+- `DataReader`: sequential reader with offset tracking; throws `BinaryReadError.outOfBounds` and never advances on a short read.
+- `BinaryDataReader`: big- and little-endian integer reads and writes at an offset. The named readers return 0, and the writers return `false`, when out of range; they never trap and do no misaligned loads. The generic `read(_:from:at:endian:)` and `write(_:to:at:endian:)` throw instead.
+- `StringExtractor.extractStrings(from:minLength:maxLength:)`: printable runs, like `strings`.
+- `BinaryReadError` and `ByteOrder`.
+- All of them read `Data` slices relative to their start index. They replace FileSystemCore's copies of the same names.
+
 ### Changed (`platform-and-test-hygiene`)
 - Building without CryptoKit is a compile-time error. The non-cryptographic placeholder that `SHA256.hash` returned on such platforms, and the `fatalError` paths in `MD5Strategy`/`SHA1Strategy`, are gone. `SHA256.hash(data:)` delegates to `SHA256Strategy`.
 - Platform claims match the build: macOS 12 and iOS 15 (both built in CI). WASM, tvOS and watchOS are no longer claimed.
