@@ -33,8 +33,20 @@ public struct ULID: Sendable, Equatable, Hashable, Codable, CustomStringConverti
         self.bytes = data
     }
 
+    /// Parses the ULID-specification text form (case-insensitive). Returns nil for strings that
+    /// are not 26 characters, use characters outside the Crockford alphabet, or start above `7`.
     public init?(string: String) {
         guard let decoded = ULID.decode(string: string) else {
+            return nil
+        }
+        self.bytes = decoded
+    }
+
+    /// Parses text written by DesignAlgorithmsKit 1.10.x and earlier, which put the 2 padding bits
+    /// at the end instead of the front. Use it to migrate stored IDs: the bytes are unchanged and
+    /// `string` then gives the specification form.
+    public init?(legacyString: String) {
+        guard let decoded = ULID.decodeLegacy(string: legacyString) else {
             return nil
         }
         self.bytes = decoded
@@ -64,55 +76,73 @@ public struct ULID: Sendable, Equatable, Hashable, Codable, CustomStringConverti
 
     // MARK: Helpers
 
+    /// 130 bits (2 zero padding bits, then the 128-bit value) as 26 five-bit characters.
     private static func encode(bytes: [UInt8]) -> String {
         precondition(bytes.count == 16, "ULID must be 16 bytes.")
         var output: [Character] = []
+        output.reserveCapacity(26)
         var buffer = 0
-        var bitsLeft = 0
+        var bitsLeft = 2 // leading padding bits
 
         for byte in bytes {
-            buffer = (buffer << 8) | Int(byte)
+            buffer = ((buffer << 8) | Int(byte)) & 0x1FFF
             bitsLeft += 8
             while bitsLeft >= 5 {
-                let index = (buffer >> (bitsLeft - 5)) & 0x1F
-                output.append(encoding[index])
+                output.append(encoding[(buffer >> (bitsLeft - 5)) & 0x1F])
                 bitsLeft -= 5
             }
         }
-
-        if bitsLeft > 0 {
-            let index = (buffer << (5 - bitsLeft)) & 0x1F
-            output.append(encoding[index])
-        }
-
-        while output.count < 26 {
-            output.append(encoding[0])
-        }
-
-        return String(output.prefix(26))
+        return String(output)
     }
 
     private static func decode(string: String) -> [UInt8]? {
-        guard string.count == 26 else { return nil }
+        let values = digits(of: string)
+        guard let values, let first = values.first, first <= 7 else { return nil }
+        // The first character holds the top 3 bits; the other 25 hold 5 bits each.
         var output: [UInt8] = []
-        var buffer = 0
-        var bitsLeft = 0
+        output.reserveCapacity(16)
+        var buffer = Int(first)
+        var bitsLeft = 3
 
-        for char in string.uppercased() {
-            guard let value = decoding[char] else { return nil }
-            buffer = (buffer << 5) | Int(value)
+        for value in values.dropFirst() {
+            buffer = ((buffer << 5) | Int(value)) & 0x1FFF
             bitsLeft += 5
-
             if bitsLeft >= 8 {
-                let byte = UInt8((buffer >> (bitsLeft - 8)) & 0xFF)
-                output.append(byte)
+                output.append(UInt8((buffer >> (bitsLeft - 8)) & 0xFF))
                 bitsLeft -= 8
             }
         }
+        return output.count == 16 ? output : nil
+    }
 
-        if output.count != 16 {
-            return nil
+    /// The ≤ 1.10.x layout: 5-bit groups from the most significant bit, 2 trailing padding bits.
+    private static func decodeLegacy(string: String) -> [UInt8]? {
+        guard let values = digits(of: string) else { return nil }
+        var output: [UInt8] = []
+        output.reserveCapacity(16)
+        var buffer = 0
+        var bitsLeft = 0
+
+        for value in values {
+            buffer = ((buffer << 5) | Int(value)) & 0x1FFF
+            bitsLeft += 5
+            if bitsLeft >= 8 {
+                output.append(UInt8((buffer >> (bitsLeft - 8)) & 0xFF))
+                bitsLeft -= 8
+            }
         }
-        return output
+        return output.count == 16 ? output : nil
+    }
+
+    /// Crockford base-32 digit values of a 26-character string, or nil.
+    private static func digits(of string: String) -> [UInt8]? {
+        guard string.count == 26 else { return nil }
+        var values: [UInt8] = []
+        values.reserveCapacity(26)
+        for char in string.uppercased() {
+            guard let value = decoding[char] else { return nil }
+            values.append(value)
+        }
+        return values
     }
 }

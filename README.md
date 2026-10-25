@@ -98,7 +98,6 @@ swift test
 
 ## Known issues
 
-- `ULID` text is not compatible with the ULID specification.
 - Platform claims are broader than tested, `WASMGuard.swift` is dead code, SHA code is duplicated, and the DocC catalog is not attached to the target.
 
 ## Documentation

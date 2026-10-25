@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (`fix-ulid-spec-compliance`)
+- **ULID text format:** `ULID.string`/`description` and `ULID(string:)` now follow the ULID specification (2 padding bits at the front, so the first character is `0`-`7`). `ULID(string:)` rejects strings starting above `7`. The 16 bytes are unchanged; only the text differs.
+- **Migration:** strings stored by 1.10.x/1.11.x do not parse the same way. Read them with the new `ULID(legacyString:)` and re-save `string`. Known consumers: RetroboxBBS and RetroServe (TermFoundation).
+
 ### Added (`fix-async-work-correctness`)
 - `ResourceCoordinator.withWriteLock(for:operation:)`.
 
