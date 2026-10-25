@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-24
+
+### Notes
+- **ULID text format changed** (see Changed below): migrate stored ULID strings with `ULID(legacyString:)`.
+- `TaskOrchestrator.execute()` now throws `OrchestrationError.taskFailure`; `ProcessingQueue.add`/`resume`/`retry` start items before returning.
+
 ### Added (`relocate-binary-readers-into-dak`)
 - `DataReader`: sequential reader with offset tracking; throws `BinaryReadError.outOfBounds` and never advances on a short read.
 - `BinaryDataReader`: big- and little-endian integer reads and writes at an offset. The named readers return 0, and the writers return `false`, when out of range; they never trap and do no misaligned loads. The generic `read(_:from:at:endian:)` and `write(_:to:at:endian:)` throw instead.
