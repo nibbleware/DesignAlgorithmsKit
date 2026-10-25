@@ -136,3 +136,51 @@ final class ULIDTests: XCTestCase {
         XCTAssertTrue(earlyULID.string < lateULID.string, "ULIDs should be lexicographically sortable by time")
     }
 }
+
+// MARK: - Specification layout (fix-ulid-spec-compliance)
+
+extension ULIDTests {
+    private static let specExample = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    /// The same 16 bytes as written by DesignAlgorithmsKit 1.10.x.
+    private static let legacyExample = "05B3WENNTFB7CK31XYWS60NXBC"
+
+    func testSpecificationTimestampPrefix() {
+        let ulid = ULID(date: Date(timeIntervalSince1970: Double(1_469_922_850_259) / 1000.0), randomBytes: Array(repeating: 0, count: 10))
+        XCTAssertTrue(ulid.string.hasPrefix("01ARZ3NDEK"), ulid.string)
+    }
+
+    func testSpecificationStringRoundTrip() throws {
+        let ulid = try XCTUnwrap(ULID(string: Self.specExample))
+        XCTAssertEqual(ulid.string, Self.specExample)
+        XCTAssertEqual(ULID(string: Self.specExample.lowercased()), ulid)
+    }
+
+    func testGeneratedStringsStartWithZeroToSeven() {
+        for _ in 0..<100 {
+            let ulid = ULID(date: Date(timeIntervalSince1970: Double.random(in: 0...4_000_000_000)))
+            XCTAssertTrue("01234567".contains(ulid.string.first!), ulid.string)
+            XCTAssertEqual(ULID(string: ulid.string), ulid)
+        }
+    }
+
+    func testOverflowingFirstCharacterIsRejected() {
+        XCTAssertNil(ULID(string: "8ZZZZZZZZZZZZZZZZZZZZZZZZZ"))
+        XCTAssertNotNil(ULID(string: "7ZZZZZZZZZZZZZZZZZZZZZZZZZ"))
+    }
+
+    func testMaximumValueRoundTrip() throws {
+        let max = try XCTUnwrap(ULID(string: "7ZZZZZZZZZZZZZZZZZZZZZZZZZ"))
+        XCTAssertEqual(max.string, "7ZZZZZZZZZZZZZZZZZZZZZZZZZ")
+    }
+
+    func testLegacyStringMigratesToSameBytes() throws {
+        let legacy = try XCTUnwrap(ULID(legacyString: Self.legacyExample))
+        XCTAssertEqual(legacy, ULID(string: Self.specExample))
+        XCTAssertEqual(legacy.string, Self.specExample)
+    }
+
+    func testLegacyParserRejectsBadInput() {
+        XCTAssertNil(ULID(legacyString: "TOO-SHORT"))
+        XCTAssertNil(ULID(legacyString: "UUUUUUUUUUUUUUUUUUUUUUUUUU"))
+    }
+}
