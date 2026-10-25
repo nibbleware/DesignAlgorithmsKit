@@ -29,7 +29,7 @@ One library product and target: **`DesignAlgorithmsKit`** (`Sources/DesignAlgori
 
 ## Platforms
 
-`Package.swift` declares macOS 12 and iOS 15, with swift-tools-version 5.10. The library imports CryptoKit and links the system zlib, so in practice it builds only for Apple platforms. The older WASM, tvOS and watchOS claims are not backed by the build.
+macOS 12 and iOS 15 (swift-tools-version 5.10); CI builds both. The library uses CryptoKit, `NSLock` and the system zlib, so it builds only for Apple platforms; building without CryptoKit fails with a compile-time error instead of producing placeholder digests. tvOS and watchOS are not declared or built.
 
 ## Dependencies
 
@@ -93,16 +93,16 @@ swift test
 ```
 
 - No other packages are needed to build DAK.
-- Current baseline: `swift build` succeeds with two warnings, and `swift test` runs 343 XCTest tests and 1 swift-testing placeholder with 0 failures.
-- `IntegrationCompressionTests` runs `/usr/bin/gzip` and `/usr/bin/gunzip`, so it needs macOS.
+- `swift build` is warning-free. `swift test` runs the unit tests (`DesignAlgorithmsKitTests`, 374 XCTest tests) and the integration tests (`DesignAlgorithmsKitIntegrationTests`), which call `/usr/bin/gzip` and `/usr/bin/gunzip` and are skipped when those tools are missing.
+- CI also builds for the iOS Simulator: `xcodebuild build -scheme DesignAlgorithmsKit -destination 'generic/platform=iOS Simulator'`.
 
 ## Known issues
 
-- Platform claims are broader than tested, `WASMGuard.swift` is dead code, SHA code is duplicated, and the DocC catalog is not attached to the target.
+None known.
 
 ## Documentation
 
-- `Documentation.docc/`: DocC articles. They are not yet attached to the target.
+- `Sources/DesignAlgorithmsKit/DesignAlgorithmsKit.docc/`: DocC catalog. Build it with Xcode's Product > Build Documentation or `xcodebuild docbuild -scheme DesignAlgorithmsKit -destination 'generic/platform=macOS'`.
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License

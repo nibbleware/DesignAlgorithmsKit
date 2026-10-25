@@ -22,13 +22,18 @@ public protocol FactoryProduct {
 /// ## Usage
 ///
 /// ```swift
-/// // Register a factory method
-/// ObjectFactory.register(type: "myType") { config in
-///     return MyType(configuration: config)
+/// let factory = ObjectFactory.shared
+///
+/// // Register a factory closure
+/// factory.register(type: "myType") { config in
+///     return try MyType(configuration: config)
 /// }
 ///
-/// // Create object via factory
-/// let object = try ObjectFactory.create(type: "myType", configuration: [:])
+/// // Or register a FactoryProduct type under its type name
+/// factory.register(MyType.self)
+///
+/// // Create an object
+/// let object = try factory.create(type: "myType", configuration: [:])
 /// ```
 public final class ObjectFactory: @unchecked Sendable {
     /// Shared singleton instance (lazy initialization)
@@ -77,7 +82,9 @@ public final class ObjectFactory: @unchecked Sendable {
     }
     
     /// Register a factory method for a FactoryProduct type
-    /// - Parameter type: The FactoryProduct type
+    /// - Parameters:
+    ///   - type: The FactoryProduct type
+    ///   - key: Registration key; defaults to the type's name
     /// Thread-safe: Can be called concurrently
     public func register<T: FactoryProduct>(_ type: T.Type, key: String? = nil) {
         #if !os(WASI) && !arch(wasm32)

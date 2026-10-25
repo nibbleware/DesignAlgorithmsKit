@@ -7,8 +7,8 @@
 
 import Foundation
 
-#if canImport(CryptoKit)
-import CryptoKit
+#if !canImport(CryptoKit)
+#error("DesignAlgorithmsKit needs CryptoKit for its digests; it builds only for Apple platforms.")
 #endif
 
 /// Protocol for hash algorithms
@@ -43,43 +43,11 @@ public extension HashAlgorithmProtocol {
     }
 }
 
-/// SHA-256 hash algorithm
+/// SHA-256 hash algorithm (CryptoKit, through ``SHA256Strategy``)
 public enum SHA256: HashAlgorithmProtocol {
     public static let name = "SHA-256"
     
     public static func hash(data: Data) -> Data {
-        #if canImport(CryptoKit)
-        let digest = CryptoKit.SHA256.hash(data: data)
-        return Data(digest)
-        #else
-        // Fallback implementation
-        // In production, use CommonCrypto or another crypto library
-        return fallbackHash(data: data)
-        #endif
+        SHA256Strategy().compute(data: data)
     }
-    
-    #if !canImport(CryptoKit)
-    /// Fallback hash implementation (simple, not cryptographically secure)
-    /// For production use, import CryptoKit or CommonCrypto
-    /// - Note: This path is conditionally compiled and only available when CryptoKit is not available.
-    ///   It cannot be tested in environments where CryptoKit is available (like macOS/iOS test environments).
-    ///   The fallback implementation is intentionally simple and not cryptographically secure.
-    private static func fallbackHash(data: Data) -> Data {
-        var hash = Data(count: 32)
-        data.withUnsafeBytes { dataBytes in
-            hash.withUnsafeMutableBytes { hashBytes in
-                // Simple hash (NOT cryptographically secure)
-                // This is a placeholder - use CryptoKit in production
-                for i in 0..<32 {
-                    var value: UInt8 = 0
-                    for j in 0..<dataBytes.count {
-                        value ^= dataBytes[j] &+ UInt8(i)
-                    }
-                    hashBytes[i] = value
-                }
-            }
-        }
-        return hash
-    }
-    #endif
 }

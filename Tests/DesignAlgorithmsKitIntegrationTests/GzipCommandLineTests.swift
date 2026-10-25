@@ -1,13 +1,24 @@
-import XCTest
-@testable import DesignAlgorithmsKit
+//
+//  GzipCommandLineTests.swift
+//  DesignAlgorithmsKitIntegrationTests
+//
+//  Interoperability with the system gzip/gunzip tools (macOS only).
+//
 
-final class IntegrationCompressionTests: XCTestCase {
+import XCTest
+import DesignAlgorithmsKit
+
+#if os(macOS)
+final class GzipCommandLineTests: XCTestCase {
     
     let fileManager = FileManager.default
     var tempDir: URL!
     
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        for tool in ["/usr/bin/gzip", "/usr/bin/gunzip"] where !fileManager.isExecutableFile(atPath: tool) {
+            throw XCTSkip("\(tool) is not available")
+        }
         tempDir = fileManager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try? fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
     }
@@ -83,3 +94,4 @@ final class IntegrationCompressionTests: XCTestCase {
         XCTAssertEqual(decompressedData, originalData)
     }
 }
+#endif

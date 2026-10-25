@@ -7,8 +7,8 @@ public struct FilenameTokenizer {
     ///
     /// Examples:
     /// - "PDFExtractor.swift" -> ["PDF", "Extractor", "swift"]
-    /// - "disk_ii_controller" -> ["disk", "ii", "controller"]
-    /// - "iPhone12Pro" -> ["iPhone", "12", "Pro"]
+    /// - "user_profile_view" -> ["user", "profile", "view"]
+    /// - "iPhone12Pro" -> ["i", "Phone", "12", "Pro"] (every lowercase-to-uppercase change splits)
     public static func tokenize(_ filename: String) -> [String] {
         // 1. Replace common separators with spaces
         let separators = CharacterSet(charactersIn: "_-.")
