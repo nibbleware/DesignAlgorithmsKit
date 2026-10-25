@@ -279,6 +279,8 @@ final class QueueTests: XCTestCase {
         let queue = ProcessingQueue<TestItem, TestProcessor>(processor: processor, maxConcurrent: 1)
         
         let item1 = TestItem(id: UUID(), data: "data1")
+        // Paused, so the retried item stays pending (add/retry start items immediately otherwise).
+        await queue.pause()
         await queue.add([item1])
         await queue.updateItem(id: item1.id, status: .failed)
         
@@ -442,8 +444,8 @@ final class QueueTests: XCTestCase {
         let queue = ProcessingQueue<TestItem, TestProcessor>(processor: processor, maxConcurrent: 1)
         
         let item1 = TestItem(id: UUID(), data: "data1")
-        await queue.add([item1])
         await queue.pause()
+        await queue.add([item1])
         
         // When - wait a bit to see if processing happens
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds

@@ -7,6 +7,8 @@ import Foundation
 public actor ResourceCoordinator {
     
     private var locks: [String: PathLock] = [:]
+    /// Operations holding or awaiting each key's lock; the lock is dropped when this reaches 0.
+    private var users: [String: Int] = [:]
     
     public init() {}
     
@@ -15,26 +17,38 @@ public actor ResourceCoordinator {
     public func withReadLock<T>(for key: String, operation: () async throws -> T) async throws -> T {
         return try await access(path: key, type: .read, operation: operation)
     }
-    
-    /// Helper to just acquire and return a token?
-    /// No, closures are safer.
-    
-    public func access<T>(path: String, type: AccessType, operation: () async throws -> T) async throws -> T {
-        let lock = getLock(for: path)
-        switch type {
-        case .read:
-            await lock.lockRead()
-            // We use standard do/defer pattern here since we are inside an async function
-            defer { Task { await lock.unlockRead() } }
-            return try await operation()
-        case .write:
-            await lock.lockWrite()
-            defer { Task { await lock.unlockWrite() } }
-            return try await operation()
-        }
+
+    /// Executes the given block with an exclusive (write) lock on the specified resource.
+    public func withWriteLock<T>(for key: String, operation: () async throws -> T) async throws -> T {
+        return try await access(path: key, type: .write, operation: operation)
     }
     
-    private func getLock(for key: String) -> PathLock {
+    /// Runs `operation` under a read or write lock on `path`. The lock is released before this
+    /// returns or throws.
+    public func access<T>(path: String, type: AccessType, operation: () async throws -> T) async throws -> T {
+        let lock = checkOut(path)
+        switch type {
+        case .read: await lock.lockRead()
+        case .write: await lock.lockWrite()
+        }
+
+        let result: Result<T, Error>
+        do {
+            result = .success(try await operation())
+        } catch {
+            result = .failure(error)
+        }
+
+        switch type {
+        case .read: await lock.unlockRead()
+        case .write: await lock.unlockWrite()
+        }
+        checkIn(path)
+        return try result.get()
+    }
+    
+    private func checkOut(_ key: String) -> PathLock {
+        users[key, default: 0] += 1
         if let lock = locks[key] {
             return lock
         }
@@ -42,6 +56,19 @@ public actor ResourceCoordinator {
         locks[key] = newLock
         return newLock
     }
+
+    private func checkIn(_ key: String) {
+        let remaining = (users[key] ?? 1) - 1
+        if remaining > 0 {
+            users[key] = remaining
+        } else {
+            users.removeValue(forKey: key)
+            locks.removeValue(forKey: key)
+        }
+    }
+
+    /// Number of keys with lock state (for tests).
+    var trackedKeyCount: Int { locks.count }
     
     public enum AccessType {
         case read

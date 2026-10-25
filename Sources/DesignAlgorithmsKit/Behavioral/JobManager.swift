@@ -151,11 +151,11 @@ public actor JobManager {
         )
     }
     
-    /// Cancel a job (Not fully implemented in this basic pattern without Task storage)
+    /// Cancel a pending job: it is removed from the queue, never runs, and ends `.failed` with
+    /// "Cancelled". Running jobs are not interrupted.
     public func cancel(id: UUID) {
-        // In a full implementation, we would store the Task handle and cancel it.
-        // For this pattern demo, we simply mark as failed if pending.
         if var state = jobs[id], state.status == .pending {
+            pendingJobs.removeAll { $0.0 == id }
             state.status = .failed
             state.error = "Cancelled"
             jobs[id] = state

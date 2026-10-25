@@ -77,6 +77,8 @@ public actor TaskOrchestrator {
     
     /// Executes all tasks in the graph, respecting dependencies.
     /// Runs independent tasks in parallel where possible.
+    /// - Throws: `OrchestrationError.taskFailure(taskId:error:)` when a task throws; tasks that
+    ///   depend on it do not run.
     public func execute() async throws {
         try validate()
         
@@ -100,10 +102,7 @@ public actor TaskOrchestrator {
             // Initial batch
             for taskId in readyQueue {
                 guard let task = tasks[taskId] else { continue }
-                group.addTask {
-                    try await task.operation()
-                    return taskId
-                }
+                group.addTask { try await Self.run(task) }
             }
             
             // Loop as tasks finish
@@ -124,15 +123,22 @@ public actor TaskOrchestrator {
                          if inDegree[downstreamId] == 0 {
                              // Ready!
                              if let task = tasks[downstreamId] {
-                                 group.addTask {
-                                     try await task.operation()
-                                     return downstreamId
-                                 }
+                                 group.addTask { try await Self.run(task) }
                              }
                          }
                      }
                  }
             }
         }
+    }
+
+    /// Runs one task, tagging its error with the task's ID.
+    private static func run(_ task: DAGTask) async throws -> String {
+        do {
+            try await task.operation()
+        } catch {
+            throw OrchestrationError.taskFailure(taskId: task.id, error: error)
+        }
+        return task.id
     }
 }
