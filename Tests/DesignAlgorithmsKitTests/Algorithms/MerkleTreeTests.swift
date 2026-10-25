@@ -114,3 +114,28 @@ final class MerkleTreeTests: XCTestCase {
         XCTAssertFalse(tree.rootHash.isEmpty)
     }
 }
+
+// MARK: - Unpaired nodes (fix-algorithm-edge-cases)
+
+extension MerkleTreeTests {
+    func testProofsVerifyForEveryLeafOfOddAndEvenTrees() {
+        for blockCount in [1, 2, 3, 4, 5, 6, 7] {
+            let blocks = (0..<blockCount).map { Data("block \($0)".utf8) }
+            let tree = MerkleTree.build(from: blocks)
+            for (index, block) in blocks.enumerated() {
+                guard let proof = tree.generateProof(for: block) else {
+                    XCTFail("No proof for block \(index) of \(blockCount)")
+                    continue
+                }
+                XCTAssertTrue(MerkleTree.verify(proof: proof, rootHash: tree.rootHash),
+                              "Proof for block \(index) of \(blockCount) does not verify")
+            }
+        }
+    }
+
+    func testProofForLastBlockOfThreeHasOnePathEntryPerLevel() throws {
+        let blocks = (0..<3).map { Data("block \($0)".utf8) }
+        let proof = try XCTUnwrap(MerkleTree.build(from: blocks).generateProof(for: blocks[2]))
+        XCTAssertEqual(proof.path.count, 2)
+    }
+}

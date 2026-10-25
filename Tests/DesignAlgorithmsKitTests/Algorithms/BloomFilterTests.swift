@@ -131,3 +131,48 @@ final class BloomFilterTests: XCTestCase {
         XCTAssertEqual(filter.elementCount, 0)
     }
 }
+
+// MARK: - Degenerate parameters (fix-algorithm-edge-cases)
+
+extension BloomFilterTests {
+    func testZeroCapacityDoesNotTrap() {
+        let filter = BloomFilter(capacity: 0)
+        XCTAssertGreaterThanOrEqual(filter.bitCount, 1)
+        XCTAssertGreaterThanOrEqual(filter.hashFunctionCount, 1)
+        filter.insert("item")
+        XCTAssertTrue(filter.contains("item"))
+    }
+
+    func testNegativeCapacityCountsAsOne() {
+        XCTAssertEqual(BloomFilter(capacity: -5).capacity, 1)
+        XCTAssertEqual(CountingBloomFilter(capacity: -5).capacity, 1)
+    }
+
+    func testZeroRateHasFiniteBitCount() {
+        let filter = BloomFilter(capacity: 100, falsePositiveRate: 0)
+        XCTAssertGreaterThan(filter.falsePositiveRate, 0)
+        XCTAssertGreaterThan(filter.bitCount, 1)
+    }
+
+    func testRateOfOneAndNaNAreClamped() {
+        XCTAssertLessThan(BloomFilter(capacity: 100, falsePositiveRate: 1).falsePositiveRate, 1)
+        XCTAssertLessThan(BloomFilter(capacity: 100, falsePositiveRate: 7).falsePositiveRate, 1)
+        let nan = BloomFilter(capacity: 100, falsePositiveRate: .nan)
+        XCTAssertTrue(nan.falsePositiveRate > 0 && nan.falsePositiveRate < 1)
+    }
+
+    func testCountingFilterDegenerateParameters() {
+        let filter = CountingBloomFilter(capacity: 0, falsePositiveRate: 0)
+        filter.insert("item")
+        XCTAssertTrue(filter.contains("item"))
+    }
+
+    func testNegativeIntegers() {
+        let filter = BloomFilter(capacity: 10)
+        filter.insert(-1)
+        filter.insert(Int.min)
+        XCTAssertTrue(filter.contains(-1))
+        XCTAssertTrue(filter.contains(Int.min))
+        XCTAssertEqual((-1).bloomHash(), UInt64.max)
+    }
+}

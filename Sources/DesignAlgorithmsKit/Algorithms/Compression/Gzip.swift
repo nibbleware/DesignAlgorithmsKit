@@ -41,8 +41,12 @@ public struct Gzip {
     /// Decompresses GZIP compressed data.
     /// - Parameter data: The compressed data (including GZIP header).
     /// - Returns: The uncompressed data.
-    /// - Throws: `Gzip.Error.decompressionFailed` or `invalidData`.
-    public static func decompress(data: Data) throws -> Data {
+    /// - Throws: `Gzip.Error.decompressionFailed`, or `invalidData` for a malformed header or a
+    ///   trailer whose CRC-32 or ISIZE does not match the inflated bytes.
+    public static func decompress(data input: Data) throws -> Data {
+        // Offsets below are zero-based; rebase slices.
+        let data = input.startIndex == 0 ? input : Data(input)
+
         // GZIP Header Validation
         guard data.count >= 18 else { throw Error.invalidData }
         guard data[0] == 0x1f, data[1] == 0x8b else { throw Error.invalidData }
@@ -82,8 +86,17 @@ public struct Gzip {
         guard data.count > headerSize + footerSize else { throw Error.invalidData }
         
         let deflatePayload = data.subdata(in: headerSize..<(data.count - footerSize))
-        
-        return try decompressRawDeflate(deflatePayload)
+        let inflated = try decompressRawDeflate(deflatePayload)
+
+        // Trailer: CRC-32 and ISIZE (length modulo 2^32), both little-endian.
+        var trailer = DataParser(data: data, offset: data.count - footerSize)
+        let expectedCRC = try trailer.readUInt32()
+        let expectedSize = try trailer.readUInt32()
+        guard CRC32Checksum.checksum(inflated) == expectedCRC,
+              UInt32(truncatingIfNeeded: inflated.count) == expectedSize else {
+            throw Error.invalidData
+        }
+        return inflated
     }
 
     // MARK: - Internal Helpers
@@ -124,8 +137,15 @@ struct DataParser {
         return chunk
     }
     
+    /// Little-endian, as every GZIP multi-byte field is.
     mutating func readUInt16() throws -> UInt16 {
         let bytes = try readBytes(count: 2)
-        return bytes.withUnsafeBytes { $0.load(as: UInt16.self) }
+        return UInt16(bytes[bytes.startIndex]) | UInt16(bytes[bytes.startIndex + 1]) << 8
+    }
+
+    /// Little-endian.
+    mutating func readUInt32() throws -> UInt32 {
+        let bytes = try readBytes(count: 4)
+        return (0..<4).reduce(UInt32(0)) { $0 | UInt32(bytes[bytes.startIndex + $1]) << (8 * $1) }
     }
 }

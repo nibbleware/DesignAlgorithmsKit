@@ -40,7 +40,34 @@ extension Data: BloomFilterHashable {
 
 extension Int: BloomFilterHashable {
     public func bloomHash() -> UInt64 {
-        return UInt64(self)
+        return UInt64(bitPattern: Int64(self))
+    }
+}
+
+/// Sizing shared by `BloomFilter` and `CountingBloomFilter`. Capacity below 1 counts as 1 and the
+/// false-positive rate is clamped into the open interval (0, 1), so sizing never divides by zero
+/// or takes the logarithm of zero.
+enum BloomFilterSizing {
+    static let minimumRate = 1e-12
+    static let maximumRate = 1.0 - 1e-12
+
+    static func capacity(_ capacity: Int) -> Int {
+        max(1, capacity)
+    }
+
+    static func rate(_ rate: Double) -> Double {
+        guard rate.isFinite else { return rate > 0 ? maximumRate : minimumRate }
+        return min(maximumRate, max(minimumRate, rate))
+    }
+
+    /// m = -n * ln(p) / (ln(2)^2)
+    static func slotCount(capacity: Int, rate: Double) -> Int {
+        Int(ceil(-Double(capacity) * log(rate) / (log(2.0) * log(2.0))))
+    }
+
+    /// k = (m/n) * ln(2)
+    static func hashCount(slots: Int, capacity: Int) -> Int {
+        Int(ceil((Double(slots) / Double(capacity)) * log(2.0)))
     }
 }
 
@@ -109,8 +136,8 @@ public final class BloomFilter {
     
     /// Initialize Bloom Filter
     /// - Parameters:
-    ///   - capacity: Expected number of elements to be inserted
-    ///   - falsePositiveRate: Desired false positive rate (0.0 to 1.0)
+    ///   - capacity: Expected number of elements to be inserted (values below 1 count as 1)
+    ///   - falsePositiveRate: Desired false positive rate, clamped into the open interval (0, 1)
     ///   - bitCount: Optional explicit bit count (calculated if nil)
     ///   - hashFunctionCount: Optional explicit hash function count (calculated if nil)
     ///
@@ -122,20 +149,11 @@ public final class BloomFilter {
         bitCount: Int? = nil,
         hashFunctionCount: Int? = nil
     ) {
-        self.capacity = capacity
-        self.falsePositiveRate = max(0.0, min(1.0, falsePositiveRate))
-        
-        // Calculate optimal bit count: m = -n * ln(p) / (ln(2)^2)
-        // where n = capacity, p = false positive rate
-        let optimalBitCount = bitCount ?? Int(
-            ceil(-Double(capacity) * log(self.falsePositiveRate) / (log(2.0) * log(2.0)))
-        )
-        
-        // Calculate optimal hash function count: k = (m/n) * ln(2)
-        // where m = bit count, n = capacity
-        let optimalHashCount = hashFunctionCount ?? Int(
-            ceil((Double(optimalBitCount) / Double(capacity)) * log(2.0))
-        )
+        self.capacity = BloomFilterSizing.capacity(capacity)
+        self.falsePositiveRate = BloomFilterSizing.rate(falsePositiveRate)
+
+        let optimalBitCount = bitCount ?? BloomFilterSizing.slotCount(capacity: self.capacity, rate: self.falsePositiveRate)
+        let optimalHashCount = hashFunctionCount ?? BloomFilterSizing.hashCount(slots: optimalBitCount, capacity: self.capacity)
         
         self.bitCount = max(1, optimalBitCount)
         self.hashFunctionCount = max(1, min(optimalHashCount, 50)) // Cap at 50 hash functions
@@ -338,8 +356,8 @@ public final class CountingBloomFilter {
     
     /// Initialize Counting Bloom Filter
     /// - Parameters:
-    ///   - capacity: Expected number of elements to be inserted
-    ///   - falsePositiveRate: Desired false positive rate (0.0 to 1.0)
+    ///   - capacity: Expected number of elements to be inserted (values below 1 count as 1)
+    ///   - falsePositiveRate: Desired false positive rate, clamped into the open interval (0, 1)
     ///   - counterCount: Optional explicit counter count (calculated if nil)
     ///   - hashFunctionCount: Optional explicit hash function count (calculated if nil)
     public init(
@@ -348,18 +366,11 @@ public final class CountingBloomFilter {
         counterCount: Int? = nil,
         hashFunctionCount: Int? = nil
     ) {
-        self.capacity = capacity
-        self.falsePositiveRate = max(0.0, min(1.0, falsePositiveRate))
-        
-        // Calculate optimal counter count (same as bit count for regular Bloom Filter)
-        let optimalCounterCount = counterCount ?? Int(
-            ceil(-Double(capacity) * log(self.falsePositiveRate) / (log(2.0) * log(2.0)))
-        )
-        
-        // Calculate optimal hash function count
-        let optimalHashCount = hashFunctionCount ?? Int(
-            ceil((Double(optimalCounterCount) / Double(capacity)) * log(2.0))
-        )
+        self.capacity = BloomFilterSizing.capacity(capacity)
+        self.falsePositiveRate = BloomFilterSizing.rate(falsePositiveRate)
+
+        let optimalCounterCount = counterCount ?? BloomFilterSizing.slotCount(capacity: self.capacity, rate: self.falsePositiveRate)
+        let optimalHashCount = hashFunctionCount ?? BloomFilterSizing.hashCount(slots: optimalCounterCount, capacity: self.capacity)
         
         self.counterCount = max(1, optimalCounterCount)
         self.hashFunctionCount = max(1, min(optimalHashCount, 50))
