@@ -50,7 +50,7 @@ import Foundation
 /// Apple platforms only: the library uses CryptoKit, `NSLock` and the system zlib.
 public struct DesignAlgorithmsKit {
     /// Library version
-    public static let version = "1.11.0"
+    public static let version = "1.12.0"
 }
 
 // Re-export all modules

@@ -55,7 +55,7 @@ Add DesignAlgorithmsKit to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.11.0")
+    .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.12.0")
 ]
 ```
 
