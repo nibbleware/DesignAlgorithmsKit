@@ -23,9 +23,10 @@ One library product and target: **`DesignAlgorithmsKit`** (`Sources/DesignAlgori
 | Probabilistic filters | `BloomFilter`, `CountingBloomFilter`, `BloomFilterHashable` |
 | Merkle tree | `MerkleTree`, `MerkleProof`, `MerkleHashable` |
 | Graphs | `Graph<T>` (directed, BFS reachability, unreachable-node detection) |
+| Binary data | `DataReader` (sequential, throwing), `BinaryDataReader` (big/little-endian at an offset; lenient named readers and checked `read`/`write`), `BinaryReadError`, `ByteOrder` |
 | Compression | `Zlib`/`ZlibError` (zlib, gzip and raw DEFLATE framing by window bits, via system zlib), `Gzip` (in-memory GZIP) |
 | Encryption | `HybridEncryption` (Curve25519 + HKDF-SHA256 + ChaCha20-Poly1305) |
-| Text / paths | `FilenameTokenizer`, `GitObjectLayout`, `FallbackTextDecoder`/`TextDecodingStrategy`/`StringEncodingStrategy`/`TextDecoderRegistry`, `Data.decodedText(using:)` |
+| Text / paths | `FilenameTokenizer`, `StringExtractor` (printable runs, like `strings`), `GitObjectLayout`, `FallbackTextDecoder`/`TextDecodingStrategy`/`StringEncodingStrategy`/`TextDecoderRegistry`, `Data.decodedText(using:)` |
 
 ## Platforms
 
