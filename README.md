@@ -98,7 +98,6 @@ swift test
 
 ## Known issues
 
-- `JobManager.cancel` does not stop a pending job; `TaskOrchestrator` never throws `taskFailure`; `ProcessingQueue` has a scheduling race; `ResourceCoordinator` releases locks late.
 - `ULID` text is not compatible with the ULID specification.
 - Platform claims are broader than tested, `WASMGuard.swift` is dead code, SHA code is duplicated, and the DocC catalog is not attached to the target.
 

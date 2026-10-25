@@ -174,9 +174,7 @@ public actor ProcessingQueue<Item: QueueItem, Processor: QueueProcessor> where P
         
         // Start processing if not paused
         if !isPaused {
-            Task {
-                await processQueue()
-            }
+            processQueue()
         }
     }
     
@@ -220,9 +218,7 @@ public actor ProcessingQueue<Item: QueueItem, Processor: QueueProcessor> where P
     /// Resume queue processing
     public func resume() {
         isPaused = false
-        Task {
-            await processQueue()
-        }
+        processQueue()
     }
     
     /// Retry a failed item
@@ -237,9 +233,7 @@ public actor ProcessingQueue<Item: QueueItem, Processor: QueueProcessor> where P
         items[index].progress = 0.0
         
         if !isPaused {
-            Task {
-                await processQueue()
-            }
+            processQueue()
         }
     }
     
@@ -266,66 +260,48 @@ public actor ProcessingQueue<Item: QueueItem, Processor: QueueProcessor> where P
         }
     }
     
-    /// Process the queue (internal method)
-    private func processQueue() async {
+    /// Start pending items while slots are free. Items are marked `.processing` here, before
+    /// their task is spawned, so back-to-back calls never start an item twice or exceed
+    /// `maxConcurrent`.
+    private func processQueue() {
         guard !isPaused else { return }
-        
-        let pending = items.filter { $0.status == .pending }
-        let processing = items.filter { $0.status == .processing }
-        let availableSlots = maxConcurrent - processing.count
-        
-        guard availableSlots > 0 else {
-            return
-        }
-        
-        let toProcess = Array(pending.prefix(availableSlots))
-        
-        for item in toProcess {
-            processItem(item)
+
+        var availableSlots = maxConcurrent - items.filter { $0.status == .processing }.count
+        var index = items.startIndex
+        while availableSlots > 0, index < items.endIndex {
+            if items[index].status == .pending {
+                items[index].status = .processing
+                items[index].progress = 0.0
+                processItem(items[index])
+                availableSlots -= 1
+            }
+            index += 1
         }
     }
-    
-    /// Process a single item (internal method)
+
+    /// Process a single item that is already marked `.processing` (internal method)
     private func processItem(_ item: Item) {
         let itemID = item.id
-        let task = Task { [weak self] in
+        let task = Task { [weak self, processor] in
             guard let self = self else { return }
             do {
-                // Update status to processing
-                // Note: await is required for actor isolation, even though updateItem is synchronous
-                // swiftlint:disable:next no_async_await_expression
-                await self.updateItem(id: itemID, status: .processing, progress: 0.0)
-                
-                // Get current item (may have been updated)
-                // Note: await is required for actor isolation when accessing actor-isolated property
-                // swiftlint:disable:next no_async_await_expression
-                let currentItem = await self.items.first(where: { $0.id == itemID })
-                guard let itemToProcess = currentItem else {
-                    // Item was removed
-                    return
-                }
-                
-                // Process the item
-                try await processor.process(itemToProcess)
-                
-                // Mark as completed
-                // swiftlint:disable:next no_async_await_expression
-                await self.updateItem(id: itemID, status: .completed, progress: 1.0)
-                
-                // Continue processing queue
-                await self.processQueue()
-                
+                try await processor.process(item)
+                await self.finish(id: itemID, status: .completed, progress: 1.0)
             } catch {
-                // Mark as failed
-                // swiftlint:disable:next no_async_await_expression
-                await self.updateItem(id: itemID, status: .failed, progress: 0.0)
-                
-                // Continue processing queue
-                await self.processQueue()
+                await self.finish(id: itemID, status: .failed, progress: 0.0)
             }
         }
-        
-        processingTasks[item.id] = task
+        processingTasks[itemID] = task
+    }
+
+    /// Number of live task handles (for tests).
+    var activeTaskCount: Int { processingTasks.count }
+
+    /// Record an item's outcome, drop its task handle and start the next items.
+    private func finish(id: Item.ID, status: QueueItemStatus, progress: Double) {
+        processingTasks.removeValue(forKey: id)
+        updateItem(id: id, status: status, progress: progress)
+        processQueue()
     }
 }
 

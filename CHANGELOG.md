@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (`fix-async-work-correctness`)
+- `ResourceCoordinator.withWriteLock(for:operation:)`.
+
+### Fixed (`fix-async-work-correctness`)
+- `JobManager.cancel(id:)` removes a pending job from the queue, so it never runs and stays `.failed`/"Cancelled".
+- `TaskOrchestrator.execute()` throws `OrchestrationError.taskFailure(taskId:error:)` for a failing task; its dependents do not run. **Callers that caught the raw task error must unwrap `taskFailure`.**
+- `ProcessingQueue` marks items `.processing` before spawning their task, so it never starts an item twice or exceeds `maxConcurrent`, and it drops finished task handles. `add`, `resume` and `retry` now start items before returning (pause the queue first to keep items pending).
+- `ResourceCoordinator` releases a key's lock before `access` returns or throws and drops idle per-key lock state.
+
 ### Fixed (`fix-algorithm-edge-cases`)
 - `MerkleTree.generateProof(for:)` adds a path entry for an unpaired node (its own hash as the right sibling), so proofs verify for every leaf of trees with an odd node count. Roots are unchanged.
 - `BloomFilter` and `CountingBloomFilter` no longer trap on degenerate sizing: a capacity below 1 counts as 1 and the false-positive rate is clamped into (0, 1). `capacity` and `falsePositiveRate` report the clamped values.
