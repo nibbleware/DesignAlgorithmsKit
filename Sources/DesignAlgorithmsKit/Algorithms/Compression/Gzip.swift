@@ -39,7 +39,7 @@ public struct Gzip {
     }
     
     /// Decompresses GZIP compressed data.
-    /// - Parameter data: The compressed data (including GZIP header).
+    /// - Parameter input: The compressed data (including GZIP header).
     /// - Returns: The uncompressed data.
     /// - Throws: `Gzip.Error.decompressionFailed`, or `invalidData` for a malformed header or a
     ///   trailer whose CRC-32 or ISIZE does not match the inflated bytes.

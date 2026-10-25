@@ -10,6 +10,8 @@ final class FilenameTokenizerTests: XCTestCase {
             ("PascalCaseFile", ["Pascal", "Case", "File"]),
             ("kebab-case-file", ["kebab", "case", "file"]),
             ("PDFExtractor", ["PDF", "Extractor"]),
+            ("user_profile_view", ["user", "profile", "view"]),
+            ("iPhone12Pro", ["i", "Phone", "12", "Pro"]),
             ("PDFExtractor.swift", ["PDF", "Extractor", "swift"]),
             ("file123", ["file", "123"]),
             ("123file", ["123", "file"]),

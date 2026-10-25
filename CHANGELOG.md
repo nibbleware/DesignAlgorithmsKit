@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (`platform-and-test-hygiene`)
+- Building without CryptoKit is a compile-time error. The non-cryptographic placeholder that `SHA256.hash` returned on such platforms, and the `fatalError` paths in `MD5Strategy`/`SHA1Strategy`, are gone. `SHA256.hash(data:)` delegates to `SHA256Strategy`.
+- Platform claims match the build: macOS 12 and iOS 15 (both built in CI). WASM, tvOS and watchOS are no longer claimed.
+- The DocC catalog lives in the target (`Sources/DesignAlgorithmsKit/DesignAlgorithmsKit.docc`), and its symbol links resolve with no warnings.
+- The gzip/gunzip interoperability tests moved to a separate `DesignAlgorithmsKitIntegrationTests` target (macOS, skipped when the tools are missing).
+- Corrected doc comments for `FilenameTokenizer`, `ObjectFactory` and `HashAlgorithm`.
+
+### Added (`platform-and-test-hygiene`)
+- `HybridEncryption` tests.
+
+### Removed (`platform-and-test-hygiene`)
+- The empty `Algorithms/WASMGuard.swift` and its `exclude` entry.
+- The GitHub Pages publish workflow and script. They needed `swift-docc-plugin`, which this package does not depend on, so they only ever published a static fallback page.
+- The placeholder swift-testing `example()` test.
+
 ### Changed (`fix-ulid-spec-compliance`)
 - **ULID text format:** `ULID.string`/`description` and `ULID(string:)` now follow the ULID specification (2 padding bits at the front, so the first character is `0`-`7`). `ULID(string:)` rejects strings starting above `7`. The 16 bytes are unchanged; only the text differs.
 - **Migration:** strings stored by 1.10.x/1.11.x do not parse the same way. Read them with the new `ULID(legacyString:)` and re-save `string`. Known consumers: RetroboxBBS and RetroServe (TermFoundation).
@@ -48,6 +63,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 - Releases v1.8.0 (FilenameTokenizer, UUIDv5Generator), v1.9.0 (Visitor, Graph, Gzip) and v1.10.0 were tagged without CHANGELOG entries; backfill is tracked in `platform-and-test-hygiene`
+
+## [1.10.0] - 2026-02-04
+
+### Changed
+- `.gitignore` excludes `.build` and other build artifacts.
+
+### Notes
+- A MerkleTree consolidation was merged and reverted before the tag; the public API matches 1.9.0.
+
+## [1.9.0] - 2026-01-02
+
+### Added
+- `Visitor` pattern and `Graph` data structure (#14).
+- `Gzip` in-memory GZIP compression and decompression (#15).
+
+## [1.8.0] - 2025-12-29
+
+### Added
+- `UUIDv5Generator` for name-based (RFC 4122 version 5) UUIDs.
+- `FilenameTokenizer` for splitting file names into words (#13).
 
 ## [1.7.0] - 2025-12-21
 

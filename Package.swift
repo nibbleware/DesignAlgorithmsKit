@@ -14,18 +14,13 @@ let package = Package(
             name: "DesignAlgorithmsKit",
             targets: ["DesignAlgorithmsKit"]),
     ],
-    dependencies: [
-        // No dependencies - keep it simple for WASM compatibility
-    ],
+    // No package dependencies. Apple platforms only (CryptoKit, NSLock).
+    dependencies: [],
     targets: [
         .target(
             name: "DesignAlgorithmsKit",
             dependencies: [],
             path: "Sources/DesignAlgorithmsKit",
-            exclude: [
-                // Exclude hash/crypto types for WASM builds (they use NSLock)
-                "Algorithms/WASMGuard.swift"
-            ],
             linkerSettings: [
                 .linkedLibrary("z")
             ]
@@ -37,6 +32,12 @@ let package = Package(
             linkerSettings: [
                 .linkedLibrary("z")
             ]
+        ),
+        // Tests that run system tools (gzip/gunzip); macOS only, skipped when the tools are missing.
+        .testTarget(
+            name: "DesignAlgorithmsKitIntegrationTests",
+            dependencies: ["DesignAlgorithmsKit"],
+            path: "Tests/DesignAlgorithmsKitIntegrationTests"
         ),
     ]
 )

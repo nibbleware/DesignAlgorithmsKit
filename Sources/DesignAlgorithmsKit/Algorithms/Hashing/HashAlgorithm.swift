@@ -9,7 +9,7 @@
 
 import Foundation
 
-/// Hash algorithms supported for file and disk image hashing
+/// Hash algorithms for content hashing and checksum validation
 public enum HashAlgorithm: String, CaseIterable, Codable, Sendable {
     /// SHA-256: Recommended default for new hash generation (cryptographically secure)
     case sha256 = "sha256"
@@ -17,7 +17,7 @@ public enum HashAlgorithm: String, CaseIterable, Codable, Sendable {
     /// SHA-1: Legacy support for existing systems (deprecated but collision-resistant)
     case sha1 = "sha1"
     
-    /// MD5: Read-only legacy support for validation against companion files and existing checksums
+    /// MD5: Read-only legacy support for validation against existing checksums
     /// ⚠️ Do not use for new hash generation - use SHA-256 instead
     /// ✅ Supported for: reading companion checksum files (.md5, .md5sum), validating against existing MD5 hashes
     case md5 = "md5"

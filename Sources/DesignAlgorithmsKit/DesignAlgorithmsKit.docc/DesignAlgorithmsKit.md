@@ -1,4 +1,4 @@
-# DesignAlgorithmsKit
+# ``DesignAlgorithmsKit``
 
 A Swift package providing common design patterns and algorithms with protocols and base types for extensibility.
 
@@ -12,35 +12,42 @@ All patterns and algorithms follow consistent implementation guidelines for main
 
 ## Topics
 
+### Articles
+
+- <doc:RegistryPattern>
+- <doc:UsingMerkleTrees>
+- <doc:UsingBloomFilters>
+
 ### Design Patterns
 
 #### Creational Patterns
-- ``ThreadSafeSingleton`` - Thread-safe singleton base class
-- ``ObjectFactory`` - Object creation without specifying concrete classes
-- ``BaseBuilder`` - Step-by-step object construction
+- ``ThreadSafeSingleton``
+- ``ObjectFactory``
+- ``BaseBuilder``
 
 #### Structural Patterns
-- ``BaseFacade`` - Simplified interface to complex subsystems
-- ``BaseAdapter`` - Adapting interfaces to client expectations
+- ``BaseFacade``
+- ``BaseAdapter``
 
 #### Behavioral Patterns
-- ``StrategyContext`` - Interchangeable algorithms
-- ``BaseObservable`` - Event notification and subscription
+- ``StrategyContext``
+- ``BaseObservable``
 
 #### Modern Patterns
-- ``TypeRegistry`` / ``Registry`` - Centralized type and value registration
+- ``TypeRegistry``
+- ``Registry``
 
 ### Algorithms & Data Structures
 
 #### Data Structures
-- ``MerkleTree`` - Hash tree for efficient data verification
-- ``BloomFilter`` - Probabilistic data structure for membership testing
-- ``CountingBloomFilter`` - Bloom Filter variant that supports element removal
+- ``MerkleTree``
+- ``BloomFilter``
+- ``CountingBloomFilter``
 
 #### Hashing
-- ``HashAlgorithm`` - Supported hash algorithms (SHA-256, SHA-1, MD5, CRC-32)
-- ``HashComputation`` - Hash computation helpers
-- ``SHA256`` - SHA-256 hash algorithm implementation
+- ``HashAlgorithm``
+- ``HashComputation``
+- ``SHA256``
 
 ## Getting Started
 
@@ -48,7 +55,7 @@ Add DesignAlgorithmsKit to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.0.0")
+    .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.11.0")
 ]
 ```
 

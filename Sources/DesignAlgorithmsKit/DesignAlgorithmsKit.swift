@@ -35,9 +35,9 @@ import Foundation
 /// - Queue Processing Pattern
 /// - Merger Pattern
 ///
-/// ### Data Structures (not available in WASM builds)
-/// - Bloom Filter (requires NSLock)
-/// - Merkle Tree (requires NSLock)
+/// ### Data Structures
+/// - Bloom Filter
+/// - Merkle Tree
 ///
 /// ### Core Utilities
 /// - Type Registry
@@ -46,9 +46,8 @@ import Foundation
 ///
 /// - macOS 12.0+
 /// - iOS 15.0+
-/// - tvOS 15.0+
-/// - watchOS 8.0+
-/// - WASM (limited - excludes hash/crypto types that require NSLock)
+///
+/// Apple platforms only: the library uses CryptoKit, `NSLock` and the system zlib.
 public struct DesignAlgorithmsKit {
     /// Library version
     public static let version = "1.11.0"
