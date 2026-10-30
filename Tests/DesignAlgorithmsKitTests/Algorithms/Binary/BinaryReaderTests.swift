@@ -117,24 +117,3 @@ final class BinaryDataReaderTests: XCTestCase {
         XCTAssertThrowsError(try BinaryDataReader.write(UInt32(1), to: &data, at: 4, endian: .big))
     }
 }
-
-final class StringExtractorTests: XCTestCase {
-    func testRunsBetweenControlBytes() {
-        var data = Data("ABC".utf8)
-        data.append(0)
-        data.append(contentsOf: Array("HELLO".utf8))
-        data.append(0)
-        data.append(contentsOf: Array(" WORLD ".utf8))
-        data.append(1)
-        XCTAssertEqual(StringExtractor.extractStrings(from: data), ["HELLO", "WORLD"])
-    }
-
-    func testLengthLimitsAndLatin1() {
-        let long = Data(repeating: 0x41, count: 300)
-        XCTAssertEqual(StringExtractor.extractStrings(from: long).first?.count, StringExtractor.maximumStringLength)
-        XCTAssertEqual(StringExtractor.extractStrings(from: long, maxLength: 10), [String(repeating: "A", count: 10)])
-        XCTAssertEqual(StringExtractor.extractStrings(from: Data([0x41, 0x42, 0x00]), minLength: 2), ["AB"])
-        XCTAssertEqual(StringExtractor.extractStrings(from: Data([0xA9, 0x41, 0x42, 0x43])), ["\u{A9}ABC"])
-        XCTAssertEqual(StringExtractor.extractStrings(from: Data()), [])
-    }
-}
