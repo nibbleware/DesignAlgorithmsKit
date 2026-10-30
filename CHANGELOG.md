@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `StringExtractor.extractStrings` is linear in the data's size: it gathered each run a `Character` at a time and measured the string (`count`, linear) before every byte, so a run cost up to `maxLength` times its length. Runs are now gathered as bytes; the results are unchanged (checked against the previous implementation on random data).
+
 ## [1.12.0] - 2026-10-24
 
 ### Notes
