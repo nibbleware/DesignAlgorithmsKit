@@ -42,9 +42,9 @@ macOS 12 and iOS 15 (swift-tools-version 5.10); CI builds both. The library uses
   ```
 - **How consumers reference DAK.** The canonical remote is `https://github.com/nibbleware/DesignAlgorithmsKit.git`, and `rickhohler/DesignAlgorithmsKit` redirects to it. Use a semver range:
   ```swift
-  .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.12.0")
+  .package(url: "https://github.com/nibbleware/DesignAlgorithmsKit.git", from: "1.13.0")
   ```
-  The latest tag is `v1.12.0`.
+  The latest tag is `v1.13.0`.
 
 ## Usage
 
